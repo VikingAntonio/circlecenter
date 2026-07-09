@@ -21,33 +21,32 @@
       height: 6px;
     }
     .custom-scroll::-webkit-scrollbar-track {
-      background: rgba(243, 244, 246, 1);
-      border-radius: 9999px;
+      background: rgba(239, 246, 255, 1);
     }
     .custom-scroll::-webkit-scrollbar-thumb {
-      background: rgba(192, 132, 252, 0.5);
+      background: rgba(147, 197, 253, 0.5);
       border-radius: 9999px;
     }
   </style>
 </head>
-<body class="bg-gradient-to-tr from-pink-100 via-purple-100 to-indigo-100 min-h-screen flex flex-col justify-between p-4">
+<body class="bg-gradient-to-tr from-blue-100 via-sky-100 to-indigo-100 min-h-screen flex flex-col justify-between p-4">
 
   <!-- Container Box -->
   <div class="max-w-4xl w-full mx-auto bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border border-white/50 overflow-hidden flex flex-col my-auto">
 
     <!-- Header -->
-    <header class="bg-purple-400 text-white p-6 flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-purple-100">
+    <header class="bg-blue-400 text-white p-6 flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-blue-100">
       <div class="flex items-center gap-3 text-center sm:text-left">
         <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-xl shadow-inner">
           <i class="fa-solid fa-graduation-cap"></i>
         </div>
         <div>
           <h1 class="text-2xl font-bold tracking-tight">Portal de Evaluaciones</h1>
-          <p class="text-xs text-purple-100 font-medium">Recursos Humanos &bull; Selección de Talento</p>
+          <p class="text-xs text-blue-100 font-medium">Recursos Humanos &bull; Selección de Talento</p>
         </div>
       </div>
       <div id="status-bar" class="hidden text-xs font-bold bg-white/20 text-white px-3 py-1.5 rounded-full flex items-center gap-2">
-        <i class="fa-solid fa-user-clock"></i> <span id="current-candidate-display">Sofía Martínez</span>
+        <i class="fa-solid fa-user-clock"></i> <span id="current-candidate-display">Nombre</span>
       </div>
     </header>
 
@@ -57,7 +56,7 @@
       <!-- STEP 1: SELECT CANDIDATE NAME (Bienvenida) -->
       <section id="step-select-candidate" class="space-y-6">
         <div class="text-center max-w-xl mx-auto space-y-3">
-          <span class="inline-block px-3 py-1 bg-pink-100 text-pink-700 rounded-full font-bold text-xs uppercase tracking-wider">¡Bienvenido!</span>
+          <span class="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full font-bold text-xs uppercase tracking-wider">¡Bienvenido!</span>
           <h2 class="text-2xl font-bold text-gray-800">Inicia tu Proceso de Selección</h2>
           <p class="text-sm text-gray-500">
             Por favor, busca tu nombre completo en la lista que habilitó el equipo de Recursos Humanos para comenzar tu examen.
@@ -72,7 +71,7 @@
             </label>
             <select
               id="select-cand"
-              class="w-full px-4 py-3 rounded-2xl border border-purple-200 bg-white/50 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent text-sm transition"
+              class="w-full px-4 py-3 rounded-2xl border border-blue-200 bg-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent text-sm transition font-semibold text-gray-700"
             >
               <option value="">Cargando candidatos habilitados...</option>
             </select>
@@ -89,97 +88,30 @@
           <button
             type="button"
             id="btn-confirm-cand"
-            class="w-full py-4 bg-purple-400 hover:bg-purple-500 text-white font-bold rounded-2xl shadow-lg shadow-purple-200 hover:shadow-purple-300 transition duration-300 flex items-center justify-center gap-2"
+            class="w-full py-4 bg-blue-400 hover:bg-blue-500 text-white font-bold rounded-2xl shadow-lg shadow-blue-200 hover:shadow-blue-300 transition duration-300 flex items-center justify-center gap-2"
           >
             Comenzar Proceso <i class="fa-solid fa-arrow-right"></i>
           </button>
         </div>
       </section>
 
-      <!-- STEP 2: GENERAL PERSONAL INFORMATION FORM -->
+      <!-- STEP 2: DYNAMIC GENERAL PERSONAL INFORMATION FORM -->
       <section id="step-info-form" class="hidden space-y-6">
-        <div class="border-b border-purple-100 pb-3 mb-4">
-          <h2 class="text-xl font-bold text-gray-800"><i class="fa-regular fa-file-lines mr-2 text-purple-400"></i>Formulario de Datos Generales</h2>
-          <p class="text-xs text-gray-500">Ingresa tus datos de contacto para que el equipo de RH pueda dar seguimiento a tu perfil.</p>
+        <div class="border-b border-blue-100 pb-3 mb-4">
+          <h2 class="text-xl font-bold text-gray-800"><i class="fa-regular fa-file-lines mr-2 text-blue-400"></i>Formulario de Registro</h2>
+          <p class="text-xs text-gray-500">Ingresa tus datos personales requeridos por Recursos Humanos para poder avanzar.</p>
         </div>
 
         <form id="cand-info-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label class="block text-gray-600 text-sm font-semibold mb-1" for="info-email">
-              Correo Electrónico
-            </label>
-            <input
-              id="info-email"
-              type="email"
-              placeholder="ejemplo@correo.com"
-              required
-              class="w-full px-4 py-3 rounded-2xl border border-purple-100 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
-            >
+          <!-- Dynamically populated from registration_forms table -->
+          <div id="dynamic-form-fields" class="grid grid-cols-1 md:grid-cols-2 gap-6 md:col-span-2">
+            <!-- Rendered by JS -->
           </div>
 
-          <div>
-            <label class="block text-gray-600 text-sm font-semibold mb-1" for="info-phone">
-              Teléfono / Celular
-            </label>
-            <input
-              id="info-phone"
-              type="tel"
-              placeholder="Ej: +52 55 1234 5678"
-              required
-              class="w-full px-4 py-3 rounded-2xl border border-purple-100 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
-            >
-          </div>
-
-          <div>
-            <label class="block text-gray-600 text-sm font-semibold mb-1" for="info-exp">
-              Años de Experiencia Relevantes
-            </label>
-            <input
-              id="info-exp"
-              type="number"
-              min="0"
-              max="50"
-              placeholder="Ej: 3"
-              required
-              class="w-full px-4 py-3 rounded-2xl border border-purple-100 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
-            >
-          </div>
-
-          <div>
-            <label class="block text-gray-600 text-sm font-semibold mb-1" for="info-degree">
-              Último Grado de Estudios
-            </label>
-            <select
-              id="info-degree"
-              required
-              class="w-full px-4 py-3 rounded-2xl border border-purple-100 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white"
-            >
-              <option value="">-- Elige una opción --</option>
-              <option value="Preparatoria">Preparatoria o Bachillerato</option>
-              <option value="Licenciatura / Ingeniería">Licenciatura / Ingeniería</option>
-              <option value="Maestría">Maestría</option>
-              <option value="Doctorado">Doctorado</option>
-              <option value="Otro">Otro</option>
-            </select>
-          </div>
-
-          <div class="md:col-span-2">
-            <label class="block text-gray-600 text-sm font-semibold mb-1" for="info-extra">
-              Breve Resumen Profesional / Herramientas que dominas
-            </label>
-            <textarea
-              id="info-extra"
-              rows="3"
-              placeholder="Ej: Dominio de Figma, Adobe XD y metodologías UX. 4 años trabajando en agencias de diseño."
-              required
-              class="w-full px-4 py-3 rounded-2xl border border-purple-100 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 custom-scroll"
-            ></textarea>
-          </div>
-
-          <div class="md:col-span-2 flex justify-end pt-4 border-t border-purple-50">
+          <div class="md:col-span-2 flex justify-end pt-4 border-t border-blue-50">
             <button
               type="submit"
-              class="px-8 py-3.5 bg-purple-400 hover:bg-purple-500 text-white font-bold rounded-2xl shadow-lg shadow-purple-100 transition duration-300"
+              class="px-8 py-3.5 bg-blue-400 hover:bg-blue-500 text-white font-bold rounded-2xl shadow-lg shadow-blue-100 transition duration-300"
             >
               Continuar al Examen Psicométrico <i class="fa-solid fa-arrow-right ml-1"></i>
             </button>
@@ -189,28 +121,27 @@
 
       <!-- STEP 3: PSYCHOMETRIC EXAM VIEW -->
       <section id="step-psychometric" class="hidden space-y-6">
-        <div class="border-b border-purple-100 pb-3 flex items-center justify-between">
+        <div class="border-b border-blue-100 pb-3 flex items-center justify-between">
           <div>
-            <span class="text-[10px] bg-pink-100 text-pink-700 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Parte 1 de 2</span>
-            <h2 class="text-xl font-bold text-gray-800"><i class="fa-solid fa-brain mr-2 text-pink-400 animate-pulse"></i>Evaluación Psicométrica General</h2>
+            <span class="text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Parte 1 de 2</span>
+            <h2 class="text-xl font-bold text-gray-800"><i class="fa-solid fa-brain mr-2 text-blue-400 animate-pulse"></i>Evaluación Psicométrica General</h2>
             <p class="text-xs text-gray-400">Esta evaluación es la misma para todas las vacantes. Elige con honestidad.</p>
           </div>
           <div class="text-right hidden sm:block">
-            <span id="psy-progress-text" class="text-xs font-bold text-purple-400">0 / 0 Respondidas</span>
+            <span id="psy-progress-text" class="text-xs font-bold text-blue-400">0 / 0 Respondidas</span>
           </div>
         </div>
 
-        <!-- Layout designed for many questions without huge scroll -->
         <div id="psy-questions-container" class="space-y-6 max-h-[50vh] overflow-y-auto custom-scroll pr-2">
           <!-- Dynamic questions -->
         </div>
 
-        <div class="flex items-center justify-between pt-4 border-t border-purple-100">
+        <div class="flex items-center justify-between pt-4 border-t border-blue-100">
           <span class="text-xs text-gray-400"><i class="fa-solid fa-circle-info"></i> Responde todas las preguntas para poder avanzar.</span>
           <button
             type="button"
             id="btn-submit-psy"
-            class="px-8 py-3.5 bg-purple-400 hover:bg-purple-500 text-white font-bold rounded-2xl shadow-lg transition duration-300"
+            class="px-8 py-3.5 bg-blue-400 hover:bg-blue-500 text-white font-bold rounded-2xl shadow-lg transition duration-300"
           >
             Guardar y Siguiente Examen <i class="fa-solid fa-chevron-right ml-1"></i>
           </button>
@@ -219,14 +150,14 @@
 
       <!-- STEP 4: TECHNICAL / VACANCY SPECIFIC EXAM VIEW -->
       <section id="step-technical" class="hidden space-y-6">
-        <div class="border-b border-purple-100 pb-3 flex items-center justify-between">
+        <div class="border-b border-blue-100 pb-3 flex items-center justify-between">
           <div>
             <span class="text-[10px] bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Parte 2 de 2</span>
             <h2 class="text-xl font-bold text-gray-800" id="tech-exam-title"><i class="fa-solid fa-award mr-2 text-indigo-400"></i>Examen Profesional</h2>
             <p class="text-xs text-gray-400" id="tech-exam-desc">Evaluación asignada de acuerdo a la vacante seleccionada.</p>
           </div>
           <div class="text-right hidden sm:block">
-            <span id="tech-progress-text" class="text-xs font-bold text-purple-400">0 / 0 Respondidas</span>
+            <span id="tech-progress-text" class="text-xs font-bold text-blue-400">0 / 0 Respondidas</span>
           </div>
         </div>
 
@@ -234,7 +165,7 @@
           <!-- Dynamic technical questions -->
         </div>
 
-        <div class="flex items-center justify-between pt-4 border-t border-purple-100">
+        <div class="flex items-center justify-between pt-4 border-t border-blue-100">
           <span class="text-xs text-gray-400"><i class="fa-solid fa-flag-checkered text-indigo-400"></i> Al presionar Terminar, tus respuestas se guardarán definitivamente.</span>
           <button
             type="button"
@@ -257,7 +188,7 @@
           Tus respuestas y datos de contacto han sido enviados correctamente al equipo de Recursos Humanos. El encargado te indicará cuáles son los siguientes pasos de tu proceso.
         </p>
 
-        <div class="bg-purple-50 p-4 rounded-2xl border border-purple-100/50 text-xs text-purple-700 font-semibold">
+        <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100/50 text-xs text-blue-700 font-semibold">
           Puedes retirarte de este equipo. Tus datos han sido resguardados de forma segura.
         </div>
 
@@ -275,12 +206,12 @@
     </div>
   </div>
 
-  <!-- Footer Link to login -->
-  <footer class="max-w-4xl w-full mx-auto text-center text-xs text-gray-400 mt-6 flex justify-between px-4">
+  <!-- Footer containing styled Login button -->
+  <footer class="max-w-4xl w-full mx-auto p-4 flex items-center justify-between gap-4 mt-6 text-xs text-gray-400">
     <div>&copy; 2025 Recursos Humanos Inc.</div>
     <div>
-      <a href="login.html" class="text-purple-400 hover:text-purple-600 font-semibold hover:underline">
-        <i class="fa-solid fa-user-tie"></i> Acceso Administrador
+      <a href="login.html" class="px-5 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold rounded-2xl transition flex items-center gap-1.5 shadow-sm border border-blue-100/50">
+        <i class="fa-solid fa-right-to-bracket text-xs"></i> Iniciar Sesión (Personal Interno)
       </a>
     </div>
   </footer>

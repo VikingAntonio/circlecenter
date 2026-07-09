@@ -40,5 +40,43 @@ CREATE TABLE IF NOT EXISTS results (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Insertar examen psicométrico por defecto si no existe
--- (En la aplicación manejaremos un fallback para crear este examen automáticamente si no existe)
+-- 4. Tabla para el Formulario de Registro Dinámico de Candidatos (CRUD por RH)
+CREATE TABLE IF NOT EXISTS registration_forms (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL DEFAULT 'Formulario Estándar',
+  fields JSONB DEFAULT '[]'::jsonb, -- Arreglo de campos personalizados creados por RH
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 5. Tabla de Usuarios Internos/Permanentes de la Empresa (CRUD por RH)
+CREATE TABLE IF NOT EXISTS company_users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  role TEXT NOT NULL, -- 'Admin', 'RH', 'Técnico'
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- HABILITAR SEGURIDAD RLS Y PERMITIR OPERACIONES PÚBLICAS (Para bypass de políticas de seguridad en pruebas)
+-- Habilita RLS en las tablas
+ALTER TABLE exams ENABLE ROW LEVEL SECURITY;
+ALTER TABLE candidates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE results ENABLE ROW LEVEL SECURITY;
+ALTER TABLE registration_forms ENABLE ROW LEVEL SECURITY;
+ALTER TABLE company_users ENABLE ROW LEVEL SECURITY;
+
+-- Crear políticas de acceso libre para simplificar el anon key
+DROP POLICY IF EXISTS "Public exams policy" ON exams;
+CREATE POLICY "Public exams policy" ON exams FOR ALL TO public USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public candidates policy" ON candidates;
+CREATE POLICY "Public candidates policy" ON candidates FOR ALL TO public USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public results policy" ON results;
+CREATE POLICY "Public results policy" ON results FOR ALL TO public USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public registration_forms policy" ON registration_forms;
+CREATE POLICY "Public registration_forms policy" ON registration_forms FOR ALL TO public USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public company_users policy" ON company_users;
+CREATE POLICY "Public company_users policy" ON company_users FOR ALL TO public USING (true) WITH CHECK (true);

@@ -1,8 +1,7 @@
-// Configuración e Inicialización de Supabase
+// Configuración e Inicialización de Supabase con Tema Azul Pastel
 const SUPABASE_URL = "https://bdehwaxjhxfyzmfdnzmh.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkZWh3YXhqaHhmeXptZmRuem1oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NDQxODgsImV4cCI6MjA5OTEyMDE4OH0.zxpENvN_-pTzknh5baF8rY9vtyW8TST7a0U96FiS1Mk";
 
-// Inicializar el cliente de Supabase usando la librería cargada por CDN (normalmente supabase.createClient)
 let supabaseClient = null;
 
 if (typeof supabase !== 'undefined') {
@@ -30,7 +29,19 @@ function checkAdminAuth() {
   return false;
 }
 
-// Inicializar examen psicométrico por defecto si no existe en la base de datos (con fines de robustez)
+// Configuración de formulario de registro por defecto
+const DEFAULT_REGISTRATION_FORM = {
+  name: "Formulario Estándar",
+  fields: [
+    { id: "email", label: "Correo Electrónico", type: "email", required: true, placeholder: "ejemplo@correo.com" },
+    { id: "phone", label: "Teléfono / Celular", type: "tel", required: true, placeholder: "Ej: +52 55 1234 5678" },
+    { id: "experiencia_anos", label: "Años de Experiencia", type: "number", required: true, placeholder: "Ej: 3" },
+    { id: "grado_estudios", label: "Último Grado de Estudios", type: "select", required: true, options: ["Preparatoria", "Licenciatura", "Maestría", "Doctorado", "Otro"] },
+    { id: "resumen_profesional", label: "Breve Resumen Profesional", type: "textarea", required: false, placeholder: "Describe tus herramientas principales..." }
+  ],
+  is_active: true
+};
+
 const DEFAULT_PSYCHOMETRIC_EXAM = {
   name: "Examen Psicométrico Estándar",
   description: "Examen psicométrico general obligatorio para todas las vacantes.",
@@ -111,12 +122,45 @@ async function ensureDefaultPsychometricExam() {
         console.error("Error al insertar examen psicométrico por defecto:", insertError);
         return null;
       }
-      console.log("Examen psicométrico por defecto creado correctamente.");
       return inserted[0];
     }
     return data[0];
   } catch (err) {
     console.error("Fallo inesperado al asegurar examen psicométrico:", err);
+    return null;
+  }
+}
+
+// Asegurar que exista el formulario de registro por defecto en Supabase
+async function ensureDefaultRegistrationForm() {
+  if (!supabaseClient) return null;
+  try {
+    const { data, error } = await supabaseClient
+      .from('registration_forms')
+      .select('id')
+      .eq('is_active', true)
+      .limit(1);
+
+    if (error) {
+      console.error("Error al buscar formulario de registro:", error);
+      return null;
+    }
+
+    if (!data || data.length === 0) {
+      const { data: inserted, error: insertError } = await supabaseClient
+        .from('registration_forms')
+        .insert([DEFAULT_REGISTRATION_FORM])
+        .select();
+
+      if (insertError) {
+        console.error("Error al insertar formulario de registro por defecto:", insertError);
+        return null;
+      }
+      return inserted[0];
+    }
+    return data[0];
+  } catch (err) {
+    console.error("Fallo inesperado al asegurar formulario de registro:", err);
     return null;
   }
 }
