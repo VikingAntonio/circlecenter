@@ -34,10 +34,58 @@ document.addEventListener('DOMContentLoaded', async () => {
   let allExams = [];
   let currentExamId = null; // null si es nuevo examen
   let partsData = []; // [{ id, title, questions: [] }]
+  let lastActivePartIdx = 0; // Índice de la sección activa para añadir modos especiales
 
   // Alerta
   function showAlert(msg, isError = false) {
     showPastelAlert(msg, isError ? "Error" : "Éxito");
+  }
+
+  // Lógica de Pestañita Especiales Colapsable
+  const specialsSidebar = document.getElementById('specials-sidebar');
+  const specialsToggleBtn = document.getElementById('specials-toggle-btn');
+  const sidebarAddCanvasBtn = document.getElementById('sidebar-add-canvas');
+
+  if (specialsToggleBtn && specialsSidebar) {
+    specialsToggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = specialsSidebar.classList.contains('translate-x-0');
+      if (isOpen) {
+        specialsSidebar.classList.remove('translate-x-0');
+        specialsSidebar.classList.add('-translate-x-[260px]');
+      } else {
+        specialsSidebar.classList.remove('-translate-x-[260px]');
+        specialsSidebar.classList.add('translate-x-0');
+      }
+    });
+
+    // Cerrar sidebar al hacer click fuera
+    document.addEventListener('click', (e) => {
+      if (specialsSidebar && !specialsSidebar.contains(e.target) && !specialsToggleBtn.contains(e.target)) {
+        specialsSidebar.classList.remove('translate-x-0');
+        specialsSidebar.classList.add('-translate-x-[260px]');
+      }
+    });
+  }
+
+  if (sidebarAddCanvasBtn) {
+    sidebarAddCanvasBtn.addEventListener('click', () => {
+      if (partsData.length === 0) {
+        showPastelAlert("Por favor, agrega al menos una sección primero antes de insertar una pregunta especial.", "Aviso");
+        return;
+      }
+      if (lastActivePartIdx >= partsData.length) {
+        lastActivePartIdx = partsData.length - 1;
+      }
+      addQuestionToPart(lastActivePartIdx, 'canvas');
+      showPastelAlert("¡Pregunta de tipo 'Lienzo Creativo (Canvas)' añadida con éxito a la sección activa!", "Modo Especial");
+
+      // Cerrar sidebar después de agregar
+      if (specialsSidebar) {
+        specialsSidebar.classList.remove('translate-x-0');
+        specialsSidebar.classList.add('-translate-x-[260px]');
+      }
+    });
   }
 
   // Cambio visual de pasos (Asistente/Wizard)
@@ -74,7 +122,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       const { data, error } = await supabaseClient
         .from('exams')
         .select('*')
-        .eq('is_psychometric', false)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -99,13 +146,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     allExams.forEach(exam => {
+      const isPsy = exam.is_psychometric === true;
+      const checkedAttr = isPsy ? 'checked' : '';
+      const badgeHtml = isPsy ? `
+        <span class="bg-amber-100 text-amber-800 text-[9px] font-extrabold px-2.5 py-1 rounded-full border border-amber-200 shadow-sm flex items-center gap-1 shrink-0">
+          <i class="fa-solid fa-star text-amber-500"></i> Obligatorio (Psicométrico)
+        </span>
+      ` : '';
+
       examsList.innerHTML += `
-        <div class="p-4 bg-white hover:bg-blue-50/50 rounded-2xl border border-blue-100 flex items-center justify-between transition gap-4 shadow-sm">
-          <div class="truncate">
-            <h3 class="font-bold text-gray-800 text-sm truncate">${exam.name}</h3>
+        <div class="p-5 bg-white hover:bg-blue-50/20 rounded-3xl border border-blue-100/50 flex flex-col md:flex-row md:items-center justify-between transition gap-4 shadow-sm ${isPsy ? 'ring-2 ring-amber-200 bg-amber-50/5 border-amber-200' : ''}">
+          <div class="truncate flex-1 space-y-2">
+            <div class="flex items-center gap-2 flex-wrap">
+              <h3 class="font-bold text-gray-800 text-sm truncate">${exam.name}</h3>
+              ${badgeHtml}
+            </div>
             <p class="text-xs text-gray-400 truncate">${exam.description || "Sin descripción"}</p>
+
+            <!-- Checkbox de Obligatoriedad -->
+            <label class="inline-flex items-center gap-2 cursor-pointer pt-1">
+              <input type="checkbox" class="toggle-psychometric-chk rounded text-amber-500 border-amber-200 focus:ring-amber-400 w-4 h-4 transition" data-id="${exam.id}" ${checkedAttr}>
+              <span class="text-[11px] font-bold text-amber-700 hover:text-amber-800 transition">Establecer como Obligatorio (Psicométrico)</span>
+            </label>
           </div>
-          <div class="flex gap-2 shrink-0">
+          <div class="flex gap-2 shrink-0 justify-end">
             <button class="edit-exam-btn px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-xl font-bold text-xs transition" data-id="${exam.id}">
               <i class="fa-solid fa-pencil"></i> Editar
             </button>
@@ -135,11 +199,57 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('.delete-exam-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.getAttribute('data-id');
-        showPastelConfirm("¿Estás seguro de que deseas borrar este examen de profesión?", async (accepted) => {
+        showPastelConfirm("¿Estás seguro de que deseas borrar este examen?", async (accepted) => {
           if (accepted) {
             await deleteExam(id);
           }
         });
+      });
+    });
+
+    // Toggle Obligatoriedad Psicométrica
+    document.querySelectorAll('.toggle-psychometric-chk').forEach(chk => {
+      chk.addEventListener('change', async () => {
+        const examId = chk.getAttribute('data-id');
+        const makePsychometric = chk.checked;
+
+        try {
+          if (makePsychometric) {
+            // 1. Desmarcar todos los demás exámenes como psicométricos en Supabase
+            const { error: resetError } = await supabaseClient
+              .from('exams')
+              .update({ is_psychometric: false })
+              .neq('id', examId);
+
+            if (resetError) throw resetError;
+
+            // 2. Marcar este como psicométrico
+            const { error: setSkewError } = await supabaseClient
+              .from('exams')
+              .update({ is_psychometric: true })
+              .eq('id', examId);
+
+            if (setSkewError) throw setSkewError;
+
+            showPastelAlert("Este examen ahora está configurado como el examen Psicométrico Obligatorio y aparecerá primero para todos los candidatos.", "Configuración Guardada");
+          } else {
+            // Desmarcar este examen
+            const { error: resetSingleError } = await supabaseClient
+              .from('exams')
+              .update({ is_psychometric: false })
+              .eq('id', examId);
+
+            if (resetSingleError) throw resetSingleError;
+
+            showPastelAlert("El examen ya no es obligatorio.", "Configuración Guardada");
+          }
+
+          await loadExams();
+        } catch (err) {
+          console.error(err);
+          showPastelAlert("Error al actualizar la configuración de obligatoriedad: " + err.message);
+          chk.checked = !makePsychometric; // Revert checkbox state
+        }
       });
     });
   }
@@ -208,8 +318,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     partsData.forEach((part, partIdx) => {
+      const isPartActive = partIdx === lastActivePartIdx;
       const partHtml = `
-        <div class="bg-white p-5 rounded-2xl border border-blue-100 shadow-sm space-y-4 relative" data-part-id="${part.id}">
+        <div class="p-6 rounded-3xl border shadow-sm space-y-4 relative transition-all duration-300 cursor-pointer ${isPartActive ? 'bg-white border-purple-300 ring-4 ring-purple-100' : 'bg-white/80 border-blue-100/70'}" data-part-id="${part.id}" data-idx="${partIdx}">
           <button type="button" class="btn-delete-part absolute top-4 right-4 text-rose-400 hover:text-rose-600 text-xs font-bold transition" data-idx="${partIdx}">
             <i class="fa-regular fa-trash-can mr-1"></i> Eliminar Sección
           </button>
@@ -250,25 +361,6 @@ document.addEventListener('DOMContentLoaded', async () => {
               </div>
             </div>
 
-            <!-- Panel Especiales Colapsable -->
-            <div class="mt-3 border border-purple-100 rounded-xl overflow-hidden bg-purple-50/10 shadow-sm">
-              <button type="button" class="w-full p-2.5 bg-purple-50 hover:bg-purple-100/80 transition flex items-center justify-between text-xs font-extrabold text-purple-700 focus:outline-none" onclick="this.nextElementSibling.classList.toggle('hidden')">
-                <span class="flex items-center gap-1.5"><i class="fa-solid fa-wand-magic-sparkles text-purple-500"></i> Especiales</span>
-                <i class="fa-solid fa-chevron-down text-[10px]"></i>
-              </button>
-              <div class="hidden p-3 bg-white space-y-2">
-                <button type="button" class="btn-add-question w-full p-3 bg-purple-50/40 hover:bg-purple-100/60 border border-purple-100 rounded-xl transition flex items-center gap-3 text-left group" data-idx="${partIdx}" data-type="canvas">
-                  <div class="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
-                    <i class="fa-solid fa-palette text-sm group-hover:scale-110 transition"></i>
-                  </div>
-                  <div>
-                    <h5 class="text-xs font-bold text-gray-800">Lienzo Creativo (Canvas)</h5>
-                    <p class="text-[9px] text-gray-500">Herramientas de dibujo tipo Illustrator, paleta, formas, atajos y cronómetro.</p>
-                  </div>
-                </button>
-              </div>
-            </div>
-
           </div>
         </div>
       `;
@@ -283,10 +375,24 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     });
 
+    // Tracking de la sección activa para modos especiales al hacer click en el bloque
+    document.querySelectorAll('[data-part-id]').forEach(block => {
+      block.addEventListener('click', () => {
+        const idx = parseInt(block.getAttribute('data-idx'));
+        if (lastActivePartIdx !== idx) {
+          lastActivePartIdx = idx;
+          renderParts();
+        }
+      });
+    });
+
     document.querySelectorAll('.btn-delete-part').forEach(btn => {
       btn.addEventListener('click', () => {
         const idx = btn.getAttribute('data-idx');
         partsData.splice(idx, 1);
+        if (lastActivePartIdx >= partsData.length && partsData.length > 0) {
+          lastActivePartIdx = partsData.length - 1;
+        }
         renderParts();
       });
     });

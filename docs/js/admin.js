@@ -219,7 +219,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-      const { error } = await supabaseClient
+      let { error } = await supabaseClient
         .from('candidates')
         .insert([{
           name,
@@ -227,7 +227,36 @@ document.addEventListener('DOMContentLoaded', async () => {
           status: 'pending'
         }]);
 
-      if (error) throw error;
+      if (error) {
+        // Fallback robusto en caso de que la columna 'assigned_exams' no exista en el caché de Supabase del usuario
+        const isColumnError = error.message && (
+          error.message.includes('assigned_exams') ||
+          error.message.includes('column') ||
+          error.message.includes('schema cache')
+        );
+
+        if (isColumnError) {
+          console.warn("La columna 'assigned_exams' no está disponible en la base de datos de Supabase. Iniciando fallback con 'assigned_exam_id' y 'assigned_exam_name'...");
+          const singleExamId = selectedExams.length > 0 ? selectedExams[0].id : null;
+          const singleExamName = selectedExams.length > 0 ? selectedExams.map(ex => ex.name).join(', ') : '';
+
+          const fallbackResult = await supabaseClient
+            .from('candidates')
+            .insert([{
+              name,
+              assigned_exam_id: singleExamId,
+              assigned_exam_name: singleExamName,
+              status: 'pending'
+            }]);
+
+          if (fallbackResult.error) {
+            throw fallbackResult.error;
+          }
+        } else {
+          throw error;
+        }
+      }
+
       showPastelAlert(`¡Candidato ${name} habilitado con éxito!`);
       candidateForm.reset();
 
