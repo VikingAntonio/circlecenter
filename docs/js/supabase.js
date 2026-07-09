@@ -33,11 +33,11 @@ function checkAdminAuth() {
 const DEFAULT_REGISTRATION_FORM = {
   name: "Formulario Estándar",
   fields: [
-    { id: "email", label: "Correo Electrónico", type: "email", required: true, placeholder: "ejemplo@correo.com" },
-    { id: "phone", label: "Teléfono / Celular", type: "tel", required: true, placeholder: "Ej: +52 55 1234 5678" },
-    { id: "experiencia_anos", label: "Años de Experiencia", type: "number", required: true, placeholder: "Ej: 3" },
+    { id: "email", label: "Correo Electrónico", type: "email", required: true },
+    { id: "phone", label: "Teléfono / Celular", type: "tel", required: true },
+    { id: "experiencia_anos", label: "Años de Experiencia", type: "number", required: true },
     { id: "grado_estudios", label: "Último Grado de Estudios", type: "select", required: true, options: ["Preparatoria", "Licenciatura", "Maestría", "Doctorado", "Otro"] },
-    { id: "resumen_profesional", label: "Breve Resumen Profesional", type: "textarea", required: false, placeholder: "Describe tus herramientas principales..." }
+    { id: "resumen_profesional", label: "Breve Resumen Profesional", type: "textarea", required: false }
   ],
   is_active: true
 };

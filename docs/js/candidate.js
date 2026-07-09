@@ -171,11 +171,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
       } else if (field.type === 'textarea') {
         fieldWidget = `
-          <textarea id="field_${field.id}" rows="3" placeholder="${field.placeholder || ''}" ${isRequired} class="cand-custom-input w-full px-4 py-3 rounded-2xl border border-blue-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 custom-scroll"></textarea>
+          <textarea id="field_${field.id}" rows="3" ${isRequired} class="cand-custom-input w-full px-4 py-3 rounded-2xl border border-blue-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 custom-scroll"></textarea>
         `;
       } else {
         fieldWidget = `
-          <input type="${field.type}" id="field_${field.id}" placeholder="${field.placeholder || ''}" ${isRequired} class="cand-custom-input w-full px-4 py-3 rounded-2xl border border-blue-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+          <input type="${field.type}" id="field_${field.id}" ${isRequired} class="cand-custom-input w-full px-4 py-3 rounded-2xl border border-blue-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
         `;
       }
 
@@ -262,7 +262,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           `;
         } else if (q.type === 'short') {
           widget = `
-            <textarea rows="2" placeholder="Escribe tu respuesta aquí..." class="psy-textarea-input w-full mt-2 px-3 py-2 rounded-xl border border-blue-100 text-xs focus:ring-2 focus:ring-blue-400 focus:outline-none" data-q-id="${q.id}"></textarea>
+            <textarea rows="2" class="psy-textarea-input w-full mt-2 px-3 py-2 rounded-xl border border-blue-100 text-xs focus:ring-2 focus:ring-blue-400 focus:outline-none" data-q-id="${q.id}"></textarea>
           `;
         }
 
@@ -393,7 +393,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           `;
         } else if (q.type === 'short') {
           widget = `
-            <textarea rows="3" placeholder="Escribe tu respuesta técnica detalladamente..." class="tech-textarea-input w-full mt-2 px-3 py-2 rounded-xl border border-indigo-100 text-xs focus:ring-2 focus:ring-blue-400 focus:outline-none" data-q-id="${q.id}"></textarea>
+            <textarea rows="3" class="tech-textarea-input w-full mt-2 px-3 py-2 rounded-xl border border-indigo-100 text-xs focus:ring-2 focus:ring-blue-400 focus:outline-none" data-q-id="${q.id}"></textarea>
           `;
         }
 

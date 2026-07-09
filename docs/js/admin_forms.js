@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const alertMsg = document.getElementById('alert-msg');
 
   let activeFormId = null;
-  let formFields = []; // [{ id, label, type, required, placeholder, options: [] }]
+  let formFields = []; // [{ id, label, type, required, options: [] }]
 
   function showAlert(msg, isError = false) {
     alertMsg.textContent = msg;
@@ -76,7 +76,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             <input
               type="text"
               value="${optsText}"
-              placeholder="Ej: Licenciatura, Maestría, Doctorado"
               class="field-opts-input w-full px-3 py-1.5 border border-blue-100 rounded-xl text-xs mt-0.5"
               data-idx="${idx}"
             >
@@ -90,25 +89,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             <i class="fa-regular fa-trash-can text-sm"></i>
           </button>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-1 gap-3">
             <div>
               <label class="text-[10px] text-gray-400 font-bold uppercase block">Etiqueta o Nombre del Campo</label>
               <input
                 type="text"
                 value="${field.label}"
-                placeholder="Ej: Años de Experiencia"
                 class="field-label-input w-full px-3 py-2 border border-blue-100 focus:outline-none rounded-xl text-xs mt-0.5"
-                data-idx="${idx}"
-              >
-            </div>
-
-            <div>
-              <label class="text-[10px] text-gray-400 font-bold uppercase block">Texto de Sugerencia (Placeholder)</label>
-              <input
-                type="text"
-                value="${field.placeholder || ''}"
-                placeholder="Ej: Ingresa tu respuesta..."
-                class="field-placeholder-input w-full px-3 py-2 border border-blue-100 focus:outline-none rounded-xl text-xs mt-0.5"
                 data-idx="${idx}"
               >
             </div>
@@ -145,14 +132,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     });
 
-    // Cambiar placeholders
-    document.querySelectorAll('.field-placeholder-input').forEach(input => {
-      input.addEventListener('change', (e) => {
-        const idx = e.target.getAttribute('data-idx');
-        formFields[idx].placeholder = e.target.value.trim();
-        renderLivePreview();
-      });
-    });
 
     // Cambiar estatus de requerido
     document.querySelectorAll('.field-required-checkbox').forEach(chk => {
@@ -195,7 +174,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         label: `Nuevo Campo de ${type}`,
         type: type,
         required: true,
-        placeholder: "Escribe tu respuesta...",
         options: defaultOpts
       });
 
@@ -229,11 +207,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
       } else if (field.type === 'textarea') {
         inputWidget = `
-          <textarea rows="2" placeholder="${field.placeholder || ''}" class="w-full px-3 py-2 rounded-xl border border-blue-100 text-xs focus:outline-none"></textarea>
+          <textarea rows="2" class="w-full px-3 py-2 rounded-xl border border-blue-100 text-xs focus:outline-none"></textarea>
         `;
       } else {
         inputWidget = `
-          <input type="${field.type}" placeholder="${field.placeholder || ''}" class="w-full px-3 py-2 rounded-xl border border-blue-100 text-xs focus:outline-none">
+          <input type="${field.type}" class="w-full px-3 py-2 rounded-xl border border-blue-100 text-xs focus:outline-none">
         `;
       }
 

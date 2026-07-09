@@ -64,55 +64,50 @@
     <!-- LEFT & CENTER: HUB MENU & CANDIDATE REGISTRATION -->
     <div class="lg:col-span-2 space-y-8">
 
-      <!-- Hub Navigation Grid (Modular Sections Access) -->
+      <!-- Hub Navigation Grid (Modular Sections Access) Simplified -->
       <div class="bg-white/90 backdrop-blur-md p-6 rounded-3xl border border-white shadow-sm space-y-4">
         <div class="border-b border-blue-100 pb-3">
           <h2 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-cubes mr-2 text-blue-400"></i>Módulos Administrativos</h2>
-          <p class="text-xs text-gray-500">Selecciona el panel de control modular que deseas consultar.</p>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <!-- Modulo Examenes -->
-          <a href="admin_exams.html" class="p-4 bg-blue-50/50 hover:bg-blue-100/50 rounded-2xl border border-blue-100/50 transition duration-300 flex items-start gap-4 group">
+          <a href="admin_exams.html" class="p-4 bg-blue-50/50 hover:bg-blue-100/50 rounded-2xl border border-blue-100/50 transition duration-300 flex items-center gap-4 group">
             <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center text-lg shadow-sm shrink-0 group-hover:scale-105 transition">
               <i class="fa-solid fa-file-signature"></i>
             </div>
             <div>
-              <h3 class="font-bold text-gray-800 text-sm group-hover:text-blue-600 transition">Creador de Exámenes (CRUD)</h3>
-              <p class="text-xs text-gray-400 mt-1">Crea exámenes interactivos por partes paso a paso con el Wizard Guiado.</p>
+              <h3 class="font-bold text-gray-800 text-base group-hover:text-blue-600 transition">Exámenes</h3>
             </div>
           </a>
 
-          <!-- Modulo Formulario Dinamico -->
-          <a href="admin_forms.html" class="p-4 bg-sky-50/50 hover:bg-sky-100/50 rounded-2xl border border-sky-100/50 transition duration-300 flex items-start gap-4 group">
+          <!-- Modulo Formulario Dinamico (Registros) -->
+          <a href="admin_forms.html" class="p-4 bg-sky-50/50 hover:bg-sky-100/50 rounded-2xl border border-sky-100/50 transition duration-300 flex items-center gap-4 group">
             <div class="w-12 h-12 bg-sky-100 text-sky-600 rounded-xl flex items-center justify-center text-lg shadow-sm shrink-0 group-hover:scale-105 transition">
               <i class="fa-solid fa-list-check"></i>
             </div>
             <div>
-              <h3 class="font-bold text-gray-800 text-sm group-hover:text-sky-600 transition">Editor de Formulario de Registro</h3>
-              <p class="text-xs text-gray-400 mt-1">Configura dinámicamente los campos que llenará el candidato antes de su examen.</p>
+              <h3 class="font-bold text-gray-800 text-base group-hover:text-sky-600 transition">Registros</h3>
             </div>
           </a>
 
-          <!-- Modulo Resultados y Perfiles -->
-          <a href="admin_results.html" class="p-4 bg-indigo-50/50 hover:bg-indigo-100/50 rounded-2xl border border-indigo-100/50 transition duration-300 flex items-start gap-4 group">
+          <!-- Modulo Resultados y Perfiles (Perfiles) -->
+          <a href="admin_results.html" class="p-4 bg-indigo-50/50 hover:bg-indigo-100/50 rounded-2xl border border-indigo-100/50 transition duration-300 flex items-center gap-4 group">
             <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center text-lg shadow-sm shrink-0 group-hover:scale-105 transition">
               <i class="fa-solid fa-chart-pie"></i>
             </div>
             <div>
-              <h3 class="font-bold text-gray-800 text-sm group-hover:text-indigo-600 transition">Resultados e Historial</h3>
-              <p class="text-xs text-gray-400 mt-1">Revisa el puntaje, ranking, y respuestas psicométricas y técnicas de candidatos.</p>
+              <h3 class="font-bold text-gray-800 text-base group-hover:text-indigo-600 transition">Perfiles</h3>
             </div>
           </a>
 
-          <!-- Modulo Usuarios de la Empresa -->
-          <a href="admin_company_users.html" class="p-4 bg-emerald-50/50 hover:bg-emerald-100/50 rounded-2xl border border-emerald-100/50 transition duration-300 flex items-start gap-4 group">
+          <!-- Modulo Usuarios de la Empresa (Usuarios) -->
+          <a href="admin_company_users.html" class="p-4 bg-emerald-50/50 hover:bg-emerald-100/50 rounded-2xl border border-emerald-100/50 transition duration-300 flex items-center gap-4 group">
             <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center text-lg shadow-sm shrink-0 group-hover:scale-105 transition">
               <i class="fa-solid fa-building-user"></i>
             </div>
             <div>
-              <h3 class="font-bold text-gray-800 text-sm group-hover:text-emerald-600 transition">Usuarios de la Empresa</h3>
-              <p class="text-xs text-gray-400 mt-1">Administra la lista permanente del personal de la corporación (Admin, RH, Técnico).</p>
+              <h3 class="font-bold text-gray-800 text-base group-hover:text-emerald-600 transition">Usuarios</h3>
             </div>
           </a>
         </div>
@@ -122,7 +117,7 @@
       <div class="bg-white/90 backdrop-blur-md p-6 rounded-3xl border border-white shadow-sm space-y-4">
         <div class="border-b border-blue-100 pb-3">
           <h2 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-user-pen mr-2 text-blue-400"></i>Habilitar Nuevo Candidato</h2>
-          <p class="text-xs text-gray-500">Registra un aspirante para que pueda iniciar sus evaluaciones hoy en otra PC.</p>
+          <p class="text-xs text-gray-500">Registra un aspirante para que pueda iniciar sus evaluaciones.</p>
         </div>
 
         <!-- Alert dynamic box -->
@@ -135,12 +130,11 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-gray-600 text-sm font-semibold mb-1" for="cand-name">
-                Nombre Completo del Candidato
+                Nombre del Candidato
               </label>
               <input
                 id="cand-name"
                 type="text"
-                placeholder="Ej: Sofía Martínez"
                 required
                 class="w-full px-4 py-3 rounded-2xl border border-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent text-sm transition bg-blue-50/10"
               >
@@ -148,7 +142,7 @@
 
             <div>
               <label class="block text-gray-600 text-sm font-semibold mb-1" for="cand-exam">
-                Asignar Examen Técnico / Profesión
+                Asignar Examen
               </label>
               <select
                 id="cand-exam"

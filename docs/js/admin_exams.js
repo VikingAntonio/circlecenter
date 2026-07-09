@@ -226,7 +226,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             <input
               type="text"
               value="${part.title}"
-              placeholder="Ej: Sección 1: Teoría Básica"
               class="part-title-input px-3 py-2 w-full border border-blue-100 focus:outline-none focus:ring-1 focus:ring-blue-300 rounded-xl text-sm font-semibold"
               data-idx="${partIdx}"
             >
@@ -301,7 +300,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <input
                   type="text"
                   value="${q.options[optIdx] || ''}"
-                  placeholder="Opción ${optIdx + 1}"
                   class="q-opt-input w-full px-2 py-1 border border-blue-100 focus:outline-none rounded-lg text-xs"
                   data-part-idx="${partIdx}"
                   data-q-idx="${qIdx}"
@@ -365,7 +363,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             <input
               type="text"
               value="${q.text}"
-              placeholder="Enunciado o Pregunta"
               class="q-text-input px-3 py-1.5 w-full border border-blue-100 focus:outline-none rounded-lg text-xs"
               data-part-idx="${partIdx}"
               data-q-idx="${qIdx}"
