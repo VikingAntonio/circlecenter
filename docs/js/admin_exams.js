@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const checkedAttr = isPsy ? 'checked' : '';
       const badgeHtml = isPsy ? `
         <span class="bg-amber-100 text-amber-800 text-[9px] font-extrabold px-2.5 py-1 rounded-full border border-amber-200 shadow-sm flex items-center gap-1 shrink-0">
-          <i class="fa-solid fa-star text-amber-500"></i> Obligatorio (Psicométrico)
+          <i class="fa-solid fa-star text-amber-500"></i> Obligatorio
         </span>
       ` : '';
 
@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <!-- Checkbox de Obligatoriedad -->
             <label class="inline-flex items-center gap-2 cursor-pointer pt-1">
               <input type="checkbox" class="toggle-psychometric-chk rounded text-amber-500 border-amber-200 focus:ring-amber-400 w-4 h-4 transition" data-id="${exam.id}" ${checkedAttr}>
-              <span class="text-[11px] font-bold text-amber-700 hover:text-amber-800 transition">Establecer como Obligatorio (Psicométrico)</span>
+              <span class="text-[11px] font-bold text-amber-700 hover:text-amber-800 transition">Establecer como Obligatorio</span>
             </label>
           </div>
           <div class="flex gap-2 shrink-0 justify-end">
@@ -377,8 +377,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Tracking de la sección activa para modos especiales al hacer click en el bloque
     document.querySelectorAll('[data-part-id]').forEach(block => {
-      block.addEventListener('click', () => {
+      block.addEventListener('click', (e) => {
         const idx = parseInt(block.getAttribute('data-idx'));
+        // Evitar re-renderizado molesto si el usuario hace click directo en inputs/selects/botones
+        if (e.target.closest('input, select, textarea, button')) {
+          lastActivePartIdx = idx;
+          return;
+        }
         if (lastActivePartIdx !== idx) {
           lastActivePartIdx = idx;
           renderParts();
