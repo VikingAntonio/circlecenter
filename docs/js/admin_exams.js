@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       examsList.innerHTML = `
         <div class="text-center py-12 text-gray-400">
           <i class="fa-regular fa-folder-open text-4xl mb-2 text-blue-100 block"></i>
-          Aún no se han creado exámenes de profesión. ¡Haz clic en "Nuevo Examen Técnico" para comenzar!
+          Aún no se han creado exámenes. ¡Haz clic en "Nuevo Examen" para comenzar!
         </div>
       `;
       return;
@@ -500,7 +500,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           .insert([payload]);
 
         if (error) throw error;
-        showAlert("¡Examen técnico guardado correctamente!");
+        showAlert("¡Examen guardado correctamente!");
       }
 
       goToStep(1);

@@ -60,9 +60,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       allExams.forEach(exam => {
         candExamsContainer.innerHTML += `
-          <label class="flex items-center gap-2 cursor-pointer hover:bg-blue-50/50 p-1.5 rounded-lg transition">
-            <input type="checkbox" name="cand-exam-check" value="${exam.id}" data-name="${exam.name}" class="rounded text-blue-500 focus:ring-blue-400">
-            <span>${exam.name}</span>
+          <label class="flex items-center gap-2.5 cursor-pointer hover:bg-blue-50/40 p-2 rounded-xl transition-all duration-200 border border-transparent hover:border-blue-100">
+            <input type="checkbox" name="cand-exam-check" value="${exam.id}" data-name="${exam.name}" class="rounded text-blue-400 border-blue-200 focus:ring-blue-400 w-4 h-4">
+            <span class="font-medium text-gray-700">${exam.name}</span>
           </label>
         `;
       });
