@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Elementos DOM
   const candidateForm = document.getElementById('candidate-form');
   const candNameInput = document.getElementById('cand-name');
-  const candExamSelect = document.getElementById('cand-exam');
+  const candExamsContainer = document.getElementById('cand-exams-container');
   const pendingCandidatesList = document.getElementById('pending-candidates-list');
   const refreshCandidatesBtn = document.getElementById('refresh-candidates-btn');
   const alertBox = document.getElementById('alert-box');
@@ -52,9 +52,19 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (error) throw error;
       allExams = data || [];
 
-      candExamSelect.innerHTML = '<option value="">-- Seleccionar Examen --</option>';
+      candExamsContainer.innerHTML = '';
+      if (allExams.length === 0) {
+        candExamsContainer.innerHTML = '<div class="text-gray-400 text-xs">No hay exámenes profesionales creados.</div>';
+        return;
+      }
+
       allExams.forEach(exam => {
-        candExamSelect.innerHTML += `<option value="${exam.id}">${exam.name}</option>`;
+        candExamsContainer.innerHTML += `
+          <label class="flex items-center gap-2 cursor-pointer hover:bg-blue-50/50 p-1.5 rounded-lg transition">
+            <input type="checkbox" name="cand-exam-check" value="${exam.id}" data-name="${exam.name}" class="rounded text-blue-500 focus:ring-blue-400">
+            <span>${exam.name}</span>
+          </label>
+        `;
       });
     } catch (err) {
       console.error(err);
@@ -95,16 +105,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     pendingCandidates.forEach(cand => {
-      const examName = cand.assigned_exam_name || "Sin examen técnico";
+      // Un candidato puede tener assigned_exams como JSONB array, o el viejo formato
+      let examText = "Sin examen técnico";
+      if (cand.assigned_exams && Array.isArray(cand.assigned_exams) && cand.assigned_exams.length > 0) {
+        examText = cand.assigned_exams.map(e => e.name).join(', ');
+      } else if (cand.assigned_exam_name) {
+        examText = cand.assigned_exam_name;
+      }
+
       pendingCandidatesList.innerHTML += `
         <div class="p-4 bg-blue-50/20 hover:bg-blue-50 rounded-2xl border border-blue-100/50 flex items-center justify-between gap-4 transition shadow-sm">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center font-bold">
+          <div class="flex items-center gap-3 max-w-[80%]">
+            <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center font-bold shrink-0">
               ${cand.name.charAt(0).toUpperCase()}
             </div>
-            <div>
-              <h3 class="font-bold text-gray-800 text-sm">${cand.name}</h3>
-              <p class="text-xs text-gray-400">Examen: <strong class="text-blue-500">${examName}</strong></p>
+            <div class="truncate">
+              <h3 class="font-bold text-gray-800 text-sm truncate">${cand.name}</h3>
+              <p class="text-xs text-gray-400 truncate">Exámenes: <strong class="text-blue-500">${examText}</strong></p>
             </div>
           </div>
           <button class="delete-cand-btn text-rose-400 hover:text-rose-600 p-2 hover:bg-rose-50 rounded-xl transition" data-id="${cand.id}">
@@ -118,9 +135,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('.delete-cand-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-id');
-        if (confirm("¿Inhabilitar y retirar de la lista de espera?")) {
-          await deleteCandidate(id);
-        }
+        showPastelConfirm("¿Deseas inhabilitar y retirar a este candidato de la lista de espera?", async (accepted) => {
+          if (accepted) {
+            await deleteCandidate(id);
+          }
+        });
       });
     });
   }
@@ -134,11 +153,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         .eq('id', id);
 
       if (error) throw error;
-      showAlert("Candidato retirado de la lista.");
+      showPastelAlert("Candidato retirado de la lista correctamente.");
       loadPendingCandidates();
     } catch (err) {
       console.error(err);
-      showAlert("Error al inhabilitar candidato: " + err.message, true);
+      showPastelAlert("Error al inhabilitar candidato: " + err.message);
     }
   }
 
@@ -146,11 +165,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   candidateForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = candNameInput.value.trim();
-    const examId = candExamSelect.value;
-    const examName = candExamSelect.options[candExamSelect.selectedIndex].text;
 
-    if (!name || !examId) {
-      showAlert("Completa todos los campos.", true);
+    // Recopilar exámenes seleccionados de los checkboxes
+    const checkedExams = [];
+    document.querySelectorAll('input[name="cand-exam-check"]:checked').forEach(chk => {
+      checkedExams.push({
+        id: chk.value,
+        name: chk.getAttribute('data-name')
+      });
+    });
+
+    if (!name) {
+      showPastelAlert("Por favor, ingresa el nombre del candidato.");
       return;
     }
 
@@ -159,18 +185,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         .from('candidates')
         .insert([{
           name,
-          assigned_exam_id: examId,
-          assigned_exam_name: examName,
+          assigned_exams: checkedExams,
           status: 'pending'
         }]);
 
       if (error) throw error;
-      showAlert(`¡Candidato ${name} habilitado correctamente!`);
+      showPastelAlert(`¡Candidato ${name} habilitado con éxito!`);
       candidateForm.reset();
+
+      // Desmarcar todos los checkboxes
+      document.querySelectorAll('input[name="cand-exam-check"]').forEach(chk => chk.checked = false);
+
       loadPendingCandidates();
     } catch (err) {
       console.error(err);
-      showAlert("Error al habilitar acceso: " + err.message, true);
+      showPastelAlert("Error al habilitar acceso: " + err.message);
     }
   });
 

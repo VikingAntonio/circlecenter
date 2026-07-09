@@ -36,14 +36,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Estado Local del Candidato
   let activeCandidates = [];
-  let selectedCandidate = null; // { id, name, assigned_exam_id, assigned_exam_name }
+  let selectedCandidate = null; // { id, name, assigned_exams: [...] }
   let psychometricExam = null;
-  let assignedTechnicalExam = null;
+
+  // Flujo multi-examen técnico
+  let assignedTechnicalExamsList = []; // Arreglo de exámenes completos traídos de Supabase
+  let currentTechnicalExamIndex = 0; // Índice en assignedTechnicalExamsList
 
   let dynamicFormStructure = []; // Campos cargados dinámicamente
   let candidateInfoAnswers = {}; // { fieldId: value }
   let psychometricAnswers = {};
-  let technicalAnswers = {};
+
+  // Guardaremos las respuestas técnicas indexadas por el id del examen para soportar múltiples exámenes independientes
+  // { [examId]: { [questionId]: answerValue } }
+  let technicalAnswersByExam = {};
 
   function showStep(stepElement) {
     [stepSelectCandidate, stepInfoForm, stepPsychometric, stepTechnical, stepCompleted].forEach(step => {
@@ -73,7 +79,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else {
         noCandidatesAlert.classList.add('hidden');
         activeCandidates.forEach(cand => {
-          selectCand.innerHTML += `<option value="${cand.id}">${cand.name} (${cand.assigned_exam_name || 'Sin examen asignado'})</option>`;
+          let examsLabel = "Sin exámenes asignados";
+          if (cand.assigned_exams && Array.isArray(cand.assigned_exams) && cand.assigned_exams.length > 0) {
+            examsLabel = cand.assigned_exams.map(e => e.name).join(', ');
+          } else if (cand.assigned_exam_name) {
+            examsLabel = cand.assigned_exam_name;
+          }
+          selectCand.innerHTML += `<option value="${cand.id}">${cand.name} (${examsLabel})</option>`;
         });
       }
     } catch (err) {
@@ -117,16 +129,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         psychometricExam = psyData[0];
       }
 
-      // 2. Obtener examen profesional asignado
-      if (selectedCandidate.assigned_exam_id) {
+      // 2. Obtener exámenes profesionales asignados (pueden ser múltiples)
+      assignedTechnicalExamsList = [];
+      const examIdsToFetch = [];
+
+      if (selectedCandidate.assigned_exams && Array.isArray(selectedCandidate.assigned_exams)) {
+        selectedCandidate.assigned_exams.forEach(e => {
+          if (e.id) examIdsToFetch.push(e.id);
+        });
+      } else if (selectedCandidate.assigned_exam_id) {
+        examIdsToFetch.push(selectedCandidate.assigned_exam_id);
+      }
+
+      if (examIdsToFetch.length > 0) {
         const { data: techData } = await supabaseClient
           .from('exams')
           .select('*')
-          .eq('id', selectedCandidate.assigned_exam_id)
-          .limit(1);
+          .in('id', examIdsToFetch);
 
         if (techData && techData.length > 0) {
-          assignedTechnicalExam = techData[0];
+          // Mantener el orden original que eligió el reclutador
+          examIdsToFetch.forEach(id => {
+            const match = techData.find(t => t.id === id);
+            if (match) assignedTechnicalExamsList.push(match);
+          });
         }
       }
 
@@ -324,11 +350,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (Object.keys(psychometricAnswers).length < totalQuestions) {
-      alert("Por favor, responde todo el examen psicométrico para poder avanzar.");
+      showPastelAlert("Por favor, responde todo el examen psicométrico para poder avanzar.");
       return;
     }
 
-    if (assignedTechnicalExam) {
+    if (assignedTechnicalExamsList.length > 0) {
+      currentTechnicalExamIndex = 0;
       renderTechnicalExam();
       showStep(stepTechnical);
     } else {
@@ -338,23 +365,37 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
   // ==========================================
-  // PASO 4: EXAMEN TÉCNICO / PROFESIONAL
+  // PASO 4: EXAMEN TÉCNICO / PROFESIONAL (SOPORTE MULTI-EXAMEN SEQUENCIAL)
   // ==========================================
   function renderTechnicalExam() {
-    techExamTitle.innerHTML = `<i class="fa-solid fa-award mr-2 text-blue-400"></i>Examen Profesional: <span class="text-blue-600 font-extrabold">${assignedTechnicalExam.name}</span>`;
-    techExamDesc.textContent = assignedTechnicalExam.description || "Evaluación práctica de profesión.";
+    const exam = assignedTechnicalExamsList[currentTechnicalExamIndex];
+    if (!exam) return;
+
+    // Actualizar tags de encabezado
+    const techHeaderTag = document.getElementById('tech-header-tag');
+    if (techHeaderTag) {
+      techHeaderTag.textContent = `Examen Técnico ${currentTechnicalExamIndex + 1} de ${assignedTechnicalExamsList.length}`;
+    }
+
+    techExamTitle.innerHTML = `<i class="fa-solid fa-award mr-2 text-blue-400"></i>Examen Profesional: <span class="text-blue-600 font-extrabold">${exam.name}</span>`;
+    techExamDesc.textContent = exam.description || "Evaluación práctica de profesión.";
+
+    // Inicializar respuestas para este examen si no existen
+    if (!technicalAnswersByExam[exam.id]) {
+      technicalAnswersByExam[exam.id] = {};
+    }
+    const currentAnswers = technicalAnswersByExam[exam.id];
 
     techQuestionsContainer.innerHTML = "";
-    if (!assignedTechnicalExam.parts || assignedTechnicalExam.parts.length === 0) {
+    if (!exam.parts || exam.parts.length === 0) {
       techQuestionsContainer.innerHTML = `<div class="text-center py-8 text-gray-400 text-sm">Este examen no contiene preguntas aún. Puedes finalizar el proceso.</div>`;
       techProgressText.textContent = "0 / 0 Respondidas";
       return;
     }
 
     let qCount = 0;
-    technicalAnswers = {};
 
-    assignedTechnicalExam.parts.forEach(part => {
+    exam.parts.forEach(part => {
       let partHtml = `
         <div class="bg-indigo-50/30 p-5 rounded-2xl border border-indigo-100/50 shadow-sm space-y-4">
           <h3 class="text-sm font-bold text-indigo-700 flex items-center gap-1.5 border-b border-indigo-100 pb-2">
@@ -366,34 +407,38 @@ document.addEventListener('DOMContentLoaded', async () => {
       part.questions.forEach(q => {
         qCount++;
         let widget = "";
+        const savedVal = currentAnswers[q.id] || "";
 
         if (q.type === 'multiple') {
           widget = `
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-              ${q.options.map(opt => `
-                <label class="flex items-center gap-2 p-2.5 rounded-xl border border-indigo-50 bg-white hover:bg-indigo-50/50 cursor-pointer transition text-xs font-semibold text-gray-700">
-                  <input type="radio" name="tech_q_${q.id}" value="${opt}" class="tech-radio-input focus:ring-blue-400 text-blue-500" data-q-id="${q.id}">
-                  <span>${opt}</span>
-                </label>
-              `).join('')}
+              ${q.options.map(opt => {
+                const checked = savedVal === opt ? 'checked' : '';
+                return `
+                  <label class="flex items-center gap-2 p-2.5 rounded-xl border border-blue-50 bg-white hover:bg-blue-50/50 cursor-pointer transition text-xs font-semibold text-gray-700">
+                    <input type="radio" name="tech_q_${q.id}" value="${opt}" ${checked} class="tech-radio-input focus:ring-blue-400 text-blue-500" data-q-id="${q.id}">
+                    <span>${opt}</span>
+                  </label>
+                `;
+              }).join('')}
             </div>
           `;
         } else if (q.type === 'boolean') {
           widget = `
             <div class="grid grid-cols-2 gap-3 mt-2 max-w-xs">
               <label class="flex items-center justify-center gap-2 p-2.5 rounded-xl border border-indigo-50 bg-white hover:bg-indigo-50/50 cursor-pointer transition text-xs font-bold text-gray-700">
-                <input type="radio" name="tech_q_${q.id}" value="Verdadero" class="tech-radio-input focus:ring-blue-400 text-blue-500" data-q-id="${q.id}">
+                <input type="radio" name="tech_q_${q.id}" value="Verdadero" ${savedVal === 'Verdadero' ? 'checked' : ''} class="tech-radio-input focus:ring-blue-400 text-blue-500" data-q-id="${q.id}">
                 Verdadero
               </label>
               <label class="flex items-center justify-center gap-2 p-2.5 rounded-xl border border-indigo-50 bg-white hover:bg-indigo-50/50 cursor-pointer transition text-xs font-bold text-gray-700">
-                <input type="radio" name="tech_q_${q.id}" value="Falso" class="tech-radio-input focus:ring-blue-400 text-blue-500" data-q-id="${q.id}">
+                <input type="radio" name="tech_q_${q.id}" value="Falso" ${savedVal === 'Falso' ? 'checked' : ''} class="tech-radio-input focus:ring-blue-400 text-blue-500" data-q-id="${q.id}">
                 Falso
               </label>
             </div>
           `;
         } else if (q.type === 'short') {
           widget = `
-            <textarea rows="3" class="tech-textarea-input w-full mt-2 px-3 py-2 rounded-xl border border-indigo-100 text-xs focus:ring-2 focus:ring-blue-400 focus:outline-none" data-q-id="${q.id}"></textarea>
+            <textarea rows="3" class="tech-textarea-input w-full mt-2 px-3 py-2 rounded-xl border border-indigo-100 text-xs focus:ring-2 focus:ring-blue-400 focus:outline-none" data-q-id="${q.id}">${savedVal}</textarea>
           `;
         }
 
@@ -412,14 +457,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       techQuestionsContainer.innerHTML += partHtml;
     });
 
-    updateProgress(techProgressText, 0, qCount);
+    const answeredCount = Object.keys(currentAnswers).length;
+    updateProgress(techProgressText, answeredCount, qCount);
+
+    // Actualizar texto del botón según si hay más exámenes después
+    if (currentTechnicalExamIndex < assignedTechnicalExamsList.length - 1) {
+      btnSubmitTech.innerHTML = `Siguiente Examen (${currentTechnicalExamIndex + 2}/${assignedTechnicalExamsList.length}) <i class="fa-solid fa-chevron-right ml-1"></i>`;
+    } else {
+      btnSubmitTech.innerHTML = `Finalizar Todo el Proceso <i class="fa-solid fa-circle-check ml-1"></i>`;
+    }
 
     // Binds
     document.querySelectorAll('.tech-radio-input').forEach(radio => {
       radio.addEventListener('change', () => {
         const qId = radio.getAttribute('data-q-id');
-        technicalAnswers[qId] = radio.value;
-        const total = countAnswers(technicalAnswers, '.tech-textarea-input');
+        currentAnswers[qId] = radio.value;
+        const total = Object.keys(currentAnswers).length;
         updateProgress(techProgressText, total, qCount);
       });
     });
@@ -429,29 +482,46 @@ document.addEventListener('DOMContentLoaded', async () => {
         const qId = ta.getAttribute('data-q-id');
         const val = ta.value.trim();
         if (val) {
-          technicalAnswers[qId] = val;
+          currentAnswers[qId] = val;
         } else {
-          delete technicalAnswers[qId];
+          delete currentAnswers[qId];
         }
-        const total = countAnswers(technicalAnswers, '.tech-textarea-input');
+        const total = Object.keys(currentAnswers).length;
         updateProgress(techProgressText, total, qCount);
       });
     });
   }
 
   btnSubmitTech.addEventListener('click', () => {
+    const exam = assignedTechnicalExamsList[currentTechnicalExamIndex];
+    if (!exam) return;
+
     let totalQuestions = 0;
-    if (assignedTechnicalExam && assignedTechnicalExam.parts) {
-      assignedTechnicalExam.parts.forEach(p => totalQuestions += p.questions.length);
+    if (exam.parts) {
+      exam.parts.forEach(p => totalQuestions += p.questions.length);
     }
 
-    if (Object.keys(technicalAnswers).length < totalQuestions) {
-      alert("Por favor, responde todas las preguntas del examen técnico para poder concluir.");
+    const currentAnswers = technicalAnswersByExam[exam.id] || {};
+    if (Object.keys(currentAnswers).length < totalQuestions) {
+      showPastelAlert("Por favor, responde todas las preguntas de este examen técnico para poder avanzar.");
       return;
     }
 
-    if (confirm("¿Estás seguro de enviar tus respuestas?")) {
-      saveAndFinish();
+    // Si hay más exámenes técnicos en la lista, pasar al siguiente
+    if (currentTechnicalExamIndex < assignedTechnicalExamsList.length - 1) {
+      showPastelConfirm("¿Deseas guardar tus respuestas de este examen y continuar al siguiente?", (accepted) => {
+        if (accepted) {
+          currentTechnicalExamIndex++;
+          renderTechnicalExam();
+          techQuestionsContainer.scrollTop = 0;
+        }
+      }, "Siguiente Examen");
+    } else {
+      showPastelConfirm("¿Estás seguro de enviar tus respuestas y finalizar todo el proceso?", (accepted) => {
+        if (accepted) {
+          saveAndFinish();
+        }
+      }, "Finalizar Evaluación");
     }
   });
 
@@ -461,25 +531,39 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ==========================================
   async function saveAndFinish() {
     try {
-      let score = 0;
-      let maxScore = 0;
+      // Si el candidato hizo múltiples exámenes, guardaremos un registro consolidado de resultados
+      // donde 'technical_answers' unifica las respuestas de todos los exámenes, y guardaremos el score acumulado.
+      let consolidatedScore = 0;
+      let consolidatedMaxScore = 0;
+      let consolidatedExamNames = [];
 
-      // Estructurar examen profesional
-      const structuredTechnical = {
-        name: assignedTechnicalExam ? assignedTechnicalExam.name : "General/Psicométrico",
-        parts: assignedTechnicalExam ? JSON.parse(JSON.stringify(assignedTechnicalExam.parts)) : []
+      // Estructuraremos un JSON unificado para 'technical_answers' con las partes de todos los exámenes realizados
+      const consolidatedTechnical = {
+        name: assignedTechnicalExamsList.map(e => e.name).join(' + '),
+        parts: []
       };
 
-      structuredTechnical.parts.forEach(p => {
-        p.questions.forEach(q => {
-          q.userAnswer = technicalAnswers[q.id] || "";
-          if (q.type !== 'short') {
-            maxScore++;
-            if (q.userAnswer === q.correct) {
-              score++;
+      assignedTechnicalExamsList.forEach(exam => {
+        consolidatedExamNames.push(exam.name);
+        const examAnswers = technicalAnswersByExam[exam.id] || {};
+
+        // Copiar las secciones y añadir las respuestas del usuario
+        const partsCopy = JSON.parse(JSON.stringify(exam.parts || []));
+        partsCopy.forEach(part => {
+          // Diferenciar el título de la sección por el nombre del examen para mayor claridad en perfiles
+          part.title = `${exam.name} - ${part.title}`;
+          part.questions.forEach(q => {
+            q.userAnswer = examAnswers[q.id] || "";
+            if (q.type !== 'short') {
+              consolidatedMaxScore++;
+              if (q.userAnswer === q.correct) {
+                consolidatedScore++;
+              }
             }
-          }
+          });
         });
+
+        consolidatedTechnical.parts = consolidatedTechnical.parts.concat(partsCopy);
       });
 
       // Estructurar psicométrico
@@ -497,6 +581,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Extraer campos clave para el registro histórico
       const candidateEmail = candidateInfoAnswers['email'] || "";
       const candidatePhone = candidateInfoAnswers['phone'] || "";
+      const positionLabel = consolidatedExamNames.length > 0 ? consolidatedExamNames.join(', ') : "Evaluación General";
 
       // Guardar en results
       const { error: insertError } = await supabaseClient
@@ -506,12 +591,12 @@ document.addEventListener('DOMContentLoaded', async () => {
           candidate_email: candidateEmail,
           candidate_phone: candidatePhone,
           candidate_info: candidateInfoAnswers,
-          position: selectedCandidate.assigned_exam_name,
+          position: positionLabel,
           psychometric_answers: structuredPsychometric,
-          technical_answers: structuredTechnical,
-          assigned_exam_name: selectedCandidate.assigned_exam_name,
-          score: score,
-          max_score: maxScore
+          technical_answers: consolidatedTechnical,
+          assigned_exam_name: positionLabel,
+          score: consolidatedScore,
+          max_score: consolidatedMaxScore
         }]);
 
       if (insertError) throw insertError;
@@ -529,7 +614,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     } catch (err) {
       console.error(err);
-      alert("Error al finalizar la evaluación: " + err.message);
+      showPastelAlert("Error al finalizar la evaluación: " + err.message);
     }
   }
 
@@ -540,7 +625,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     selectedCandidate = null;
     candidateInfoAnswers = {};
     psychometricAnswers = {};
-    technicalAnswers = {};
+    technicalAnswersByExam = {};
+    assignedTechnicalExamsList = [];
+    currentTechnicalExamIndex = 0;
     loadActiveCandidates();
     showStep(stepSelectCandidate);
   });

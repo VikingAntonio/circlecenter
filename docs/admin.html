@@ -141,16 +141,15 @@
             </div>
 
             <div>
-              <label class="block text-gray-600 text-sm font-semibold mb-1" for="cand-exam">
-                Asignar Examen
+              <label class="block text-gray-600 text-sm font-semibold mb-1">
+                Asignar Exámenes Técnicos (Opcional, selecciona múltiples)
               </label>
-              <select
-                id="cand-exam"
-                required
-                class="w-full px-4 py-3 rounded-2xl border border-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent text-sm bg-white transition"
+              <div
+                id="cand-exams-container"
+                class="w-full p-4 rounded-2xl border border-blue-100 bg-white max-h-32 overflow-y-auto custom-scroll space-y-2 text-xs"
               >
-                <option value="">Cargando exámenes...</option>
-              </select>
+                <div class="text-gray-400">Cargando exámenes...</div>
+              </div>
             </div>
           </div>
 

@@ -131,6 +131,91 @@ async function ensureDefaultPsychometricExam() {
   }
 }
 
+// Funciones personalizadas de diálogos hermosos con colores pastel
+function showPastelAlert(message, title = "Aviso") {
+  // Eliminar cualquier modal existente
+  const existing = document.getElementById('pastel-alert-modal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'pastel-alert-modal';
+  modal.className = 'fixed inset-0 z-[999] bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity duration-300';
+  modal.innerHTML = `
+    <div class="bg-white rounded-3xl p-6 max-w-sm w-full border border-blue-100 shadow-2xl transform scale-95 transition-all duration-300 space-y-4">
+      <div class="flex items-center gap-3 border-b border-blue-50 pb-2">
+        <div class="w-9 h-9 bg-blue-100 text-blue-500 rounded-xl flex items-center justify-center text-sm">
+          <i class="fa-solid fa-circle-info"></i>
+        </div>
+        <h4 class="text-base font-bold text-gray-800">${title}</h4>
+      </div>
+      <p class="text-sm text-gray-600 leading-relaxed">${message}</p>
+      <div class="flex justify-end">
+        <button id="pastel-alert-ok" class="px-5 py-2 bg-blue-400 hover:bg-blue-500 text-white font-bold rounded-xl text-xs shadow-md shadow-blue-100 transition duration-300">
+          Entendido
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  // Focus and action
+  setTimeout(() => {
+    const okBtn = document.getElementById('pastel-alert-ok');
+    if (okBtn) {
+      okBtn.focus();
+      okBtn.addEventListener('click', () => {
+        modal.remove();
+      });
+    }
+  }, 50);
+}
+
+function showPastelConfirm(message, callback, title = "Confirmar Acción") {
+  const existing = document.getElementById('pastel-confirm-modal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'pastel-confirm-modal';
+  modal.className = 'fixed inset-0 z-[999] bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity duration-300';
+  modal.innerHTML = `
+    <div class="bg-white rounded-3xl p-6 max-w-sm w-full border border-blue-100 shadow-2xl transform scale-95 transition-all duration-300 space-y-4">
+      <div class="flex items-center gap-3 border-b border-blue-50 pb-2">
+        <div class="w-9 h-9 bg-amber-100 text-amber-500 rounded-xl flex items-center justify-center text-sm">
+          <i class="fa-solid fa-circle-question"></i>
+        </div>
+        <h4 class="text-base font-bold text-gray-800">${title}</h4>
+      </div>
+      <p class="text-sm text-gray-600 leading-relaxed">${message}</p>
+      <div class="flex justify-end gap-2">
+        <button id="pastel-confirm-cancel" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold rounded-xl text-xs transition">
+          Cancelar
+        </button>
+        <button id="pastel-confirm-yes" class="px-5 py-2 bg-blue-400 hover:bg-blue-500 text-white font-bold rounded-xl text-xs shadow-md shadow-blue-100 transition">
+          Aceptar
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  setTimeout(() => {
+    const yesBtn = document.getElementById('pastel-confirm-yes');
+    const noBtn = document.getElementById('pastel-confirm-cancel');
+
+    if (yesBtn && noBtn) {
+      yesBtn.focus();
+      yesBtn.addEventListener('click', () => {
+        modal.remove();
+        if (callback) callback(true);
+      });
+      noBtn.addEventListener('click', () => {
+        modal.remove();
+        if (callback) callback(false);
+      });
+    }
+  }, 50);
+}
+
 // Asegurar que exista el formulario de registro por defecto en Supabase
 async function ensureDefaultRegistrationForm() {
   if (!supabaseClient) return null;

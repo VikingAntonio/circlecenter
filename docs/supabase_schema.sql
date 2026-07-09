@@ -18,8 +18,7 @@ CREATE TABLE IF NOT EXISTS exams (
 CREATE TABLE IF NOT EXISTS candidates (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
-  assigned_exam_id UUID REFERENCES exams(id) ON DELETE SET NULL,
-  assigned_exam_name TEXT,
+  assigned_exams JSONB DEFAULT '[]'::jsonb, -- Lista de exámenes asignados: [{id: "...", name: "..."}]
   status TEXT DEFAULT 'pending', -- 'pending' (activo) o 'completed'
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

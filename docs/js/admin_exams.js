@@ -37,16 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Alerta
   function showAlert(msg, isError = false) {
-    alertMsg.textContent = msg;
-    if (isError) {
-      alertBox.className = "bg-rose-100 border border-rose-200 text-rose-800 px-4 py-3 rounded-2xl flex items-center justify-between text-sm shadow-sm";
-    } else {
-      alertBox.className = "bg-emerald-100 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-2xl flex items-center justify-between text-sm shadow-sm";
-    }
-    alertBox.classList.remove('hidden');
-    setTimeout(() => {
-      alertBox.classList.add('hidden');
-    }, 4500);
+    showPastelAlert(msg, isError ? "Error" : "Éxito");
   }
 
   // Cambio visual de pasos (Asistente/Wizard)
@@ -142,11 +133,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     document.querySelectorAll('.delete-exam-btn').forEach(btn => {
-      btn.addEventListener('click', async () => {
+      btn.addEventListener('click', () => {
         const id = btn.getAttribute('data-id');
-        if (confirm("¿Estás seguro de que deseas borrar este examen de profesión?")) {
-          await deleteExam(id);
-        }
+        showPastelConfirm("¿Estás seguro de que deseas borrar este examen de profesión?", async (accepted) => {
+          if (accepted) {
+            await deleteExam(id);
+          }
+        });
       });
     });
   }
@@ -175,7 +168,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     examDescInput.value = "";
     partsData = [{
       id: "part_" + Date.now(),
-      title: "Sección 1: Teoría Práctica",
+      title: "Sección 1",
       questions: []
     }];
     goToStep(2);
@@ -208,7 +201,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (partsData.length === 0) {
       partsContainer.innerHTML = `
         <div class="text-center py-6 text-gray-400 text-xs">
-          Aún no hay secciones en este examen. Haz clic en "Agregar Sección" para comenzar.
+          Aún no hay secciones en este examen. Haz clic en "Agregar seccion" para comenzar.
         </div>
       `;
       return;
@@ -238,17 +231,23 @@ document.addEventListener('DOMContentLoaded', async () => {
               ${renderQuestionsForPart(part.questions, partIdx)}
             </div>
 
-            <!-- Acciones de Preguntas -->
-            <div class="flex flex-wrap gap-2 pt-2">
-              <button type="button" class="btn-add-question px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-xl transition" data-idx="${partIdx}" data-type="multiple">
-                <i class="fa-solid fa-circle-dot mr-1"></i> Opción Múltiple
-              </button>
-              <button type="button" class="btn-add-question px-3 py-2 bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-bold rounded-xl transition" data-idx="${partIdx}" data-type="boolean">
-                <i class="fa-solid fa-circle-half-stroke mr-1"></i> Verdadero / Falso
-              </button>
-              <button type="button" class="btn-add-question px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold rounded-xl transition" data-idx="${partIdx}" data-type="short">
-                <i class="fa-solid fa-font mr-1"></i> Respuesta Corta / Abierta
-              </button>
+            <!-- Acciones de Preguntas con un Selector Visual Muy Bonito -->
+            <div class="bg-blue-50/30 p-4 rounded-xl border border-blue-50 space-y-2 mt-3">
+              <span class="text-[10px] font-extrabold text-blue-500 uppercase tracking-wider block">Elige el tipo de pregunta a agregar:</span>
+              <div class="grid grid-cols-3 gap-2">
+                <button type="button" class="btn-add-question p-3 bg-white hover:bg-blue-100 border border-blue-100 rounded-xl transition flex flex-col items-center justify-center gap-1 group" data-idx="${partIdx}" data-type="multiple">
+                  <i class="fa-solid fa-circle-dot text-blue-500 group-hover:scale-110 transition"></i>
+                  <span class="text-[10px] font-bold text-gray-700">Opción Múltiple</span>
+                </button>
+                <button type="button" class="btn-add-question p-3 bg-white hover:bg-sky-100 border border-sky-100 rounded-xl transition flex flex-col items-center justify-center gap-1 group" data-idx="${partIdx}" data-type="boolean">
+                  <i class="fa-solid fa-circle-half-stroke text-sky-500 group-hover:scale-110 transition"></i>
+                  <span class="text-[10px] font-bold text-gray-700">Falso / Verdadero</span>
+                </button>
+                <button type="button" class="btn-add-question p-3 bg-white hover:bg-amber-100 border border-amber-100 rounded-xl transition flex flex-col items-center justify-center gap-1 group" data-idx="${partIdx}" data-type="short">
+                  <i class="fa-solid fa-font text-amber-500 group-hover:scale-110 transition"></i>
+                  <span class="text-[10px] font-bold text-gray-700">Abierta / Corta</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -258,9 +257,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Inputs de Sección bindings
     document.querySelectorAll('.part-title-input').forEach(input => {
-      input.addEventListener('change', (e) => {
+      input.addEventListener('input', (e) => {
         const idx = e.target.getAttribute('data-idx');
-        partsData[idx].title = e.target.value.trim();
+        partsData[idx].title = e.target.value;
       });
     });
 
@@ -389,20 +388,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function bindQuestionInputs() {
     document.querySelectorAll('.q-text-input').forEach(input => {
-      input.addEventListener('change', (e) => {
+      input.addEventListener('input', (e) => {
         const partIdx = e.target.getAttribute('data-part-idx');
         const qIdx = e.target.getAttribute('data-q-idx');
-        partsData[partIdx].questions[qIdx].text = e.target.value.trim();
+        partsData[partIdx].questions[qIdx].text = e.target.value;
       });
     });
 
     document.querySelectorAll('.q-opt-input').forEach(input => {
-      input.addEventListener('change', () => {
+      input.addEventListener('input', () => {
         const partIdx = input.getAttribute('data-part-idx');
         const qIdx = input.getAttribute('data-q-idx');
         const optIdx = input.getAttribute('data-opt-idx');
-        partsData[partIdx].questions[qIdx].options[optIdx] = input.value.trim();
-        renderParts();
+        partsData[partIdx].questions[qIdx].options[optIdx] = input.value;
+
+        // No llamamos a renderParts() completo para no perder focus, pero actualizamos los dropdowns de correcta dinámicamente si es necesario
+        const correctSelect = document.querySelector(`.q-correct-select[data-part-idx="${partIdx}"][data-q-idx="${qIdx}"]`);
+        if (correctSelect) {
+          const currentVal = correctSelect.value;
+          correctSelect.innerHTML = '<option value="">Selecciona la correcta...</option>';
+          partsData[partIdx].questions[qIdx].options.forEach((opt, idx) => {
+            const optLabel = opt || `Opción ${idx + 1}`;
+            const selectedStr = currentVal === opt && opt ? 'selected' : '';
+            correctSelect.innerHTML += `<option value="${opt}" ${selectedStr}>${optLabel}</option>`;
+          });
+        }
       });
     });
 

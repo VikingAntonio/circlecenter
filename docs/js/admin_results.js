@@ -27,6 +27,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   let allResults = [];
   let distinctVacancies = new Set();
+  let activeReport = null; // Guardar reporte actual abierto en el modal
+  let allAvailableExams = []; // Todos los exámenes disponibles para asignar extra
 
   // Cargar resultados
   async function loadResults() {
@@ -48,8 +50,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       populateVacancyFilter();
       renderResults();
+      await loadAvailableExamsForAssign();
     } catch (err) {
       console.error(err);
+    }
+  }
+
+  // Cargar exámenes para el selector modal de asignación extra
+  async function loadAvailableExamsForAssign() {
+    try {
+      const { data, error } = await supabaseClient
+        .from('exams')
+        .select('*')
+        .eq('is_psychometric', false)
+        .order('name', { ascending: true });
+
+      if (error) throw error;
+      allAvailableExams = data || [];
+
+      const select = document.getElementById('modal-assign-extra-select');
+      if (select) {
+        select.innerHTML = '<option value="">-- Elige Examen Técnico --</option>';
+        allAvailableExams.forEach(exam => {
+          select.innerHTML += `<option value="${exam.id}">${exam.name}</option>`;
+        });
+      }
+    } catch (err) {
+      console.error("Error al obtener exámenes:", err);
     }
   }
 
@@ -141,14 +168,43 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function showReportModal(report) {
+    activeReport = report;
     modalCandName.textContent = report.candidate_name;
     modalCandPos.textContent = `Vacante de Interés: ${report.assigned_exam_name || 'General'}`;
     modalCandEmail.textContent = report.candidate_email || 'No especificado';
     modalCandPhone.textContent = report.candidate_phone || 'No especificado';
 
-    const scorePct = report.max_score > 0 ? Math.round((report.score / report.max_score) * 100) : 100;
-    modalCandScore.textContent = report.max_score > 0 ? `${report.score} / ${report.max_score}` : 'Evaluación Abierta';
-    modalCandPercentage.textContent = report.max_score > 0 ? `${scorePct}%` : 'Finalizado';
+    // Contar correctas, incorrectas y vacías en examen técnico
+    let correct = 0;
+    let incorrect = 0;
+    let empty = 0;
+    let totalQuestions = 0;
+
+    const techParts = (report.technical_answers && report.technical_answers.parts) || [];
+    techParts.forEach(part => {
+      part.questions.forEach(q => {
+        if (q.type !== 'short') {
+          totalQuestions++;
+          const ans = (q.userAnswer || "").trim();
+          if (ans === "") {
+            empty++;
+          } else if (ans === q.correct) {
+            correct++;
+          } else {
+            incorrect++;
+          }
+        } else {
+          totalQuestions++;
+          if ((q.userAnswer || "").trim() === "") {
+            empty++;
+          }
+        }
+      });
+    });
+
+    const scorePct = totalQuestions > 0 ? Math.round((correct / totalQuestions) * 100) : 100;
+    modalCandScore.textContent = `${correct} bien, ${incorrect} mal, ${empty} vacías de ${totalQuestions}`;
+    modalCandPercentage.textContent = `${scorePct}%`;
 
     // Formulario de Registro Dinámico render
     modalCandInfoFields.innerHTML = "";
@@ -240,8 +296,46 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // Acción de asignar examen adicional en cualquier momento
+  const assignExtraBtn = document.getElementById('modal-btn-assign-extra');
+  if (assignExtraBtn) {
+    assignExtraBtn.addEventListener('click', async () => {
+      const select = document.getElementById('modal-assign-extra-select');
+      const examId = select.value;
+      if (!examId || !activeReport) {
+        showPastelAlert("Selecciona un examen técnico de la lista.");
+        return;
+      }
+
+      const examObj = allAvailableExams.find(e => e.id === examId);
+      if (!examObj) return;
+
+      try {
+        // Habilitar en lista de espera de candidatos (como "pending")
+        // con la lista de exámenes asignados (este nuevo examen)
+        const { error } = await supabaseClient
+          .from('candidates')
+          .insert([{
+            name: activeReport.candidate_name,
+            assigned_exams: [{ id: examObj.id, name: examObj.name }],
+            status: 'pending'
+          }]);
+
+        if (error) throw error;
+        showPastelAlert(`¡Examen "${examObj.name}" asignado con éxito! El candidato ya puede ingresar en su equipo para realizarlo.`);
+        closeModal();
+      } catch (err) {
+        console.error(err);
+        showPastelAlert("No se pudo asignar el examen adicional: " + err.message);
+      }
+    });
+  }
+
   // Cerrar Modal
-  const closeModal = () => resultModal.classList.add('hidden');
+  const closeModal = () => {
+    resultModal.classList.add('hidden');
+    activeReport = null;
+  };
   modalCloseBtn.addEventListener('click', closeModal);
   modalCloseBottomBtn.addEventListener('click', closeModal);
 
