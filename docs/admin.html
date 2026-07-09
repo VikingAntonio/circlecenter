@@ -144,11 +144,24 @@
               <label class="block text-gray-600 text-sm font-semibold mb-1">
                 Asignar Examen
               </label>
-              <div
-                id="cand-exams-container"
-                class="w-full p-4 rounded-2xl border border-blue-100 bg-white max-h-36 overflow-y-auto custom-scroll space-y-1.5 text-xs text-gray-700"
-              >
-                <div class="text-gray-400">Cargando exámenes...</div>
+              <div class="relative">
+                <!-- Dropdown Trigger Button -->
+                <button
+                  type="button"
+                  id="cand-exams-dropdown-btn"
+                  class="w-full px-4 py-3 rounded-2xl border border-blue-100 bg-white flex justify-between items-center text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400/50 transition duration-200"
+                >
+                  <span id="selected-exams-text">-- Seleccionar Examen --</span>
+                  <i class="fa-solid fa-chevron-down text-blue-400 text-xs transition duration-200" id="dropdown-chevron"></i>
+                </button>
+                <!-- Dropdown Menu -->
+                <div
+                  id="cand-exams-dropdown-menu"
+                  class="hidden absolute left-0 right-0 z-50 mt-1.5 bg-white border border-blue-100 rounded-2xl shadow-xl max-h-48 overflow-y-auto custom-scroll p-2 space-y-1"
+                >
+                  <!-- Dynamically populated options list -->
+                  <div class="text-center py-4 text-xs text-gray-400">Cargando exámenes...</div>
+                </div>
               </div>
             </div>
           </div>

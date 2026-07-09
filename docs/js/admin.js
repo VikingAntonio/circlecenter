@@ -10,7 +10,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Elementos DOM
   const candidateForm = document.getElementById('candidate-form');
   const candNameInput = document.getElementById('cand-name');
-  const candExamsContainer = document.getElementById('cand-exams-container');
+  const candExamsDropdownBtn = document.getElementById('cand-exams-dropdown-btn');
+  const candExamsDropdownMenu = document.getElementById('cand-exams-dropdown-menu');
+  const selectedExamsText = document.getElementById('selected-exams-text');
+  const dropdownChevron = document.getElementById('dropdown-chevron');
   const pendingCandidatesList = document.getElementById('pending-candidates-list');
   const refreshCandidatesBtn = document.getElementById('refresh-candidates-btn');
   const alertBox = document.getElementById('alert-box');
@@ -18,6 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   let allExams = [];
   let pendingCandidates = [];
+  let selectedExams = []; // [{id, name}]
 
   // LOGOUT
   document.getElementById('logout-btn').addEventListener('click', () => {
@@ -39,6 +43,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, 4000);
   }
 
+  // Toggle Custom Dropdown Menu
+  if (candExamsDropdownBtn) {
+    candExamsDropdownBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      candExamsDropdownMenu.classList.toggle('hidden');
+      dropdownChevron.classList.toggle('rotate-180');
+    });
+  }
+
+  // Close dropdown on click outside
+  document.addEventListener('click', (e) => {
+    if (candExamsDropdownMenu && !candExamsDropdownMenu.contains(e.target) && e.target !== candExamsDropdownBtn) {
+      candExamsDropdownMenu.classList.add('hidden');
+      dropdownChevron.classList.remove('rotate-180');
+    }
+  });
+
   // Cargar Exámenes Técnicos para Asignar
   async function loadExams() {
     if (!supabaseClient) return;
@@ -52,23 +73,49 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (error) throw error;
       allExams = data || [];
 
-      candExamsContainer.innerHTML = '';
+      candExamsDropdownMenu.innerHTML = '';
       if (allExams.length === 0) {
-        candExamsContainer.innerHTML = '<div class="text-gray-400 text-xs">No hay exámenes profesionales creados.</div>';
+        candExamsDropdownMenu.innerHTML = '<div class="text-center py-4 text-gray-400 text-xs">No hay exámenes creados.</div>';
         return;
       }
 
       allExams.forEach(exam => {
-        candExamsContainer.innerHTML += `
-          <label class="flex items-center gap-2.5 cursor-pointer hover:bg-blue-50/40 p-2 rounded-xl transition-all duration-200 border border-transparent hover:border-blue-100">
-            <input type="checkbox" name="cand-exam-check" value="${exam.id}" data-name="${exam.name}" class="rounded text-blue-400 border-blue-200 focus:ring-blue-400 w-4 h-4">
-            <span class="font-medium text-gray-700">${exam.name}</span>
+        candExamsDropdownMenu.innerHTML += `
+          <label class="flex items-center gap-2.5 p-2 rounded-xl hover:bg-blue-50/50 cursor-pointer transition duration-150 text-xs font-semibold text-gray-700">
+            <input type="checkbox" name="cand-exam-check" value="${exam.id}" data-name="${exam.name}" class="cand-exam-checkbox rounded text-blue-400 border-blue-200 focus:ring-blue-400 w-4 h-4 transition">
+            <span>${exam.name}</span>
           </label>
         `;
       });
+
+      // Bind checking changes
+      document.querySelectorAll('.cand-exam-checkbox').forEach(chk => {
+        chk.addEventListener('change', () => {
+          updateSelectedExamsText();
+        });
+      });
+
     } catch (err) {
       console.error(err);
       showAlert("Error al obtener exámenes técnicos: " + err.message, true);
+    }
+  }
+
+  function updateSelectedExamsText() {
+    selectedExams = [];
+    document.querySelectorAll('.cand-exam-checkbox:checked').forEach(chk => {
+      selectedExams.push({
+        id: chk.value,
+        name: chk.getAttribute('data-name')
+      });
+    });
+
+    if (selectedExams.length === 0) {
+      selectedExamsText.textContent = '-- Seleccionar Examen --';
+      selectedExamsText.className = 'text-gray-400 text-sm';
+    } else {
+      selectedExamsText.textContent = selectedExams.map(e => e.name).join(', ');
+      selectedExamsText.className = 'text-gray-700 text-sm font-semibold truncate max-w-[90%]';
     }
   }
 
@@ -166,15 +213,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     e.preventDefault();
     const name = candNameInput.value.trim();
 
-    // Recopilar exámenes seleccionados de los checkboxes
-    const checkedExams = [];
-    document.querySelectorAll('input[name="cand-exam-check"]:checked').forEach(chk => {
-      checkedExams.push({
-        id: chk.value,
-        name: chk.getAttribute('data-name')
-      });
-    });
-
     if (!name) {
       showPastelAlert("Por favor, ingresa el nombre del candidato.");
       return;
@@ -185,7 +223,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         .from('candidates')
         .insert([{
           name,
-          assigned_exams: checkedExams,
+          assigned_exams: selectedExams,
           status: 'pending'
         }]);
 
@@ -193,8 +231,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       showPastelAlert(`¡Candidato ${name} habilitado con éxito!`);
       candidateForm.reset();
 
-      // Desmarcar todos los checkboxes
-      document.querySelectorAll('input[name="cand-exam-check"]').forEach(chk => chk.checked = false);
+      // Desmarcar todos los checkboxes del dropdown
+      document.querySelectorAll('.cand-exam-checkbox').forEach(chk => chk.checked = false);
+      updateSelectedExamsText();
 
       loadPendingCandidates();
     } catch (err) {
