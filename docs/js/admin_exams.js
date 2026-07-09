@@ -249,6 +249,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </button>
               </div>
             </div>
+
+            <!-- Panel Especiales Colapsable -->
+            <div class="mt-3 border border-purple-100 rounded-xl overflow-hidden bg-purple-50/10 shadow-sm">
+              <button type="button" class="w-full p-2.5 bg-purple-50 hover:bg-purple-100/80 transition flex items-center justify-between text-xs font-extrabold text-purple-700 focus:outline-none" onclick="this.nextElementSibling.classList.toggle('hidden')">
+                <span class="flex items-center gap-1.5"><i class="fa-solid fa-wand-magic-sparkles text-purple-500"></i> Especiales</span>
+                <i class="fa-solid fa-chevron-down text-[10px]"></i>
+              </button>
+              <div class="hidden p-3 bg-white space-y-2">
+                <button type="button" class="btn-add-question w-full p-3 bg-purple-50/40 hover:bg-purple-100/60 border border-purple-100 rounded-xl transition flex items-center gap-3 text-left group" data-idx="${partIdx}" data-type="canvas">
+                  <div class="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-palette text-sm group-hover:scale-110 transition"></i>
+                  </div>
+                  <div>
+                    <h5 class="text-xs font-bold text-gray-800">Lienzo Creativo (Canvas)</h5>
+                    <p class="text-[9px] text-gray-500">Herramientas de dibujo tipo Illustrator, paleta, formas, atajos y cronómetro.</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
       `;
@@ -344,6 +364,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             <i class="fa-solid fa-circle-info"></i> Pregunta abierta. El reclutador analizará y evaluará la respuesta de forma libre.
           </div>
         `;
+      } else if (q.type === 'canvas') {
+        extraHtml = `
+          <div class="mt-2 text-[10px] text-purple-600 bg-purple-50 p-3 rounded-xl border border-purple-100 flex flex-col gap-1">
+            <span class="font-bold flex items-center gap-1"><i class="fa-solid fa-palette text-purple-500"></i> Lienzo Creativo Integrado (A4 + Herramientas de Dibujo)</span>
+            <span class="text-gray-500 font-medium">El candidato dispondrá de un lienzo de dibujo a escala A4 con paleta de colores, trazos libres, círculos, rectángulos, estrellas, atajos de teclado (Ctrl+Z, Ctrl+C, Ctrl+V, Espacio para arrastrar y zoom de rueda) y un temporizador de 30 minutos. El diseño final se exportará como imagen para evaluación.</span>
+          </div>
+        `;
       }
 
       return `
@@ -355,8 +382,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div>
             <div class="flex items-center gap-2 mb-1">
               <span class="text-[8px] font-bold px-1.5 py-0.5 rounded-md uppercase ${
-                q.type === 'multiple' ? 'bg-blue-100 text-blue-700' : q.type === 'boolean' ? 'bg-sky-100 text-sky-700' : 'bg-amber-100 text-amber-800'
-              }">${q.type === 'multiple' ? 'Múltiple' : q.type === 'boolean' ? 'V / F' : 'Abierta'}</span>
+                q.type === 'multiple' ? 'bg-blue-100 text-blue-700' : q.type === 'boolean' ? 'bg-sky-100 text-sky-700' : q.type === 'short' ? 'bg-amber-100 text-amber-800' : 'bg-purple-100 text-purple-800'
+              }">${q.type === 'multiple' ? 'Múltiple' : q.type === 'boolean' ? 'V / F' : q.type === 'short' ? 'Abierta' : 'Canvas (Ilustrador)'}</span>
               <span class="text-[10px] text-gray-400">Pregunta ${qIdx + 1}</span>
             </div>
             <input

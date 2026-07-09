@@ -440,6 +440,118 @@ document.addEventListener('DOMContentLoaded', async () => {
           widget = `
             <textarea rows="3" class="tech-textarea-input w-full mt-2 px-3 py-2 rounded-xl border border-indigo-100 text-xs focus:ring-2 focus:ring-blue-400 focus:outline-none" data-q-id="${q.id}">${savedVal}</textarea>
           `;
+        } else if (q.type === 'canvas') {
+          widget = `
+            <div class="illustrator-container mt-3 bg-slate-900 border border-slate-800 rounded-3xl p-4 flex flex-col gap-4 text-white relative select-none overflow-hidden" data-q-id="${q.id}">
+
+              <!-- Header Bar (Timer and Info) -->
+              <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
+                  <span class="text-xs font-bold text-rose-400 uppercase tracking-widest animate-pulse" id="canvas-timer-${q.id}">Tiempo Restante: 30:00</span>
+                </div>
+                <div class="text-[10px] text-slate-400 flex items-center gap-2">
+                  <span class="bg-purple-950/80 px-2 py-0.5 rounded text-purple-300 font-extrabold uppercase text-[9px] border border-purple-800">Lienzo A4 (Illustrator Mode)</span>
+                  <span class="hidden md:inline">Atajos: <strong class="text-purple-300">Ctrl+Z</strong> (Deshacer) &bull; <strong class="text-purple-300">Ctrl+C/V</strong> (Duplicar) &bull; <strong class="text-purple-300">Espacio+Arrastrar</strong></span>
+                </div>
+              </div>
+
+              <!-- Main Workspace Grid -->
+              <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 relative">
+
+                <!-- Left Toolbar -->
+                <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 flex flex-col justify-between space-y-4">
+                  <!-- Tool selectors -->
+                  <div class="space-y-3">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Herramientas</span>
+                    <div class="grid grid-cols-2 gap-2">
+                      <button type="button" id="tool-select-${q.id}" class="canvas-tool-btn p-2 rounded-xl transition text-xs font-bold flex flex-col items-center gap-1 active bg-purple-600 text-white" data-tool="select" data-q-id="${q.id}">
+                        <i class="fa-solid fa-arrow-pointer"></i>
+                        <span class="text-[9px]">Puntero</span>
+                      </button>
+                      <button type="button" id="tool-draw-${q.id}" class="canvas-tool-btn p-2 rounded-xl transition text-xs font-bold flex flex-col items-center gap-1 bg-slate-900 text-slate-400 hover:bg-slate-800" data-tool="draw" data-q-id="${q.id}">
+                        <i class="fa-solid fa-pencil"></i>
+                        <span class="text-[9px]">Lápiz</span>
+                      </button>
+                      <button type="button" id="tool-rect-${q.id}" class="canvas-tool-btn p-2 rounded-xl transition text-xs font-bold flex flex-col items-center gap-1 bg-slate-900 text-slate-400 hover:bg-slate-800" data-tool="rect" data-q-id="${q.id}">
+                        <i class="fa-regular fa-square"></i>
+                        <span class="text-[9px]">Rectángulo</span>
+                      </button>
+                      <button type="button" id="tool-circle-${q.id}" class="canvas-tool-btn p-2 rounded-xl transition text-xs font-bold flex flex-col items-center gap-1 bg-slate-900 text-slate-400 hover:bg-slate-800" data-tool="circle" data-q-id="${q.id}">
+                        <i class="fa-regular fa-circle"></i>
+                        <span class="text-[9px]">Círculo</span>
+                      </button>
+                    </div>
+
+                    <!-- Line Width -->
+                    <div class="space-y-1">
+                      <label class="text-[9px] text-slate-400 font-bold block uppercase">Grosor de Trazo</label>
+                      <input type="range" id="brush-size-${q.id}" min="1" max="40" value="5" class="w-full accent-purple-500">
+                    </div>
+
+                    <!-- Add Text tool -->
+                    <div class="space-y-1 pt-1 border-t border-slate-800/60">
+                      <label class="text-[9px] text-slate-400 font-bold block uppercase">Añadir Texto al Lienzo</label>
+                      <div class="flex gap-1.5">
+                        <input type="text" id="text-input-${q.id}" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-xs text-white focus:outline-none" placeholder="Escribe aquí..." value="Hola Mundo">
+                        <button type="button" id="btn-add-text-${q.id}" class="px-2.5 py-1 bg-purple-600 hover:bg-purple-500 rounded-lg text-xs font-bold" data-q-id="${q.id}"><i class="fa-solid fa-plus"></i></button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Actions / Clear -->
+                  <div class="space-y-2 pt-2 border-t border-slate-800/60">
+                    <button type="button" id="btn-undo-${q.id}" class="w-full py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-lg text-[10px] font-bold text-slate-300 transition flex items-center justify-center gap-1.5" data-q-id="${q.id}">
+                      <i class="fa-solid fa-rotate-left"></i> Deshacer (Ctrl+Z)
+                    </button>
+                    <button type="button" id="btn-clear-${q.id}" class="w-full py-1.5 bg-rose-950/40 hover:bg-rose-900/50 border border-rose-900/40 text-rose-300 rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1.5" data-q-id="${q.id}">
+                      <i class="fa-regular fa-trash-can"></i> Limpiar Lienzo
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Center Canvas Area (A4 Sheet layout) -->
+                <div class="lg:col-span-2 bg-slate-950 rounded-2xl border border-slate-800 flex items-center justify-center overflow-hidden relative" style="height: 480px;" id="canvas-container-${q.id}">
+                  <!-- Scaled A4 workspace board -->
+                  <div id="a4-board-${q.id}" class="bg-white relative shadow-2xl origin-center" style="width: 310px; height: 438px; transform: scale(1); min-width: 310px; min-height: 438px;">
+                    <canvas id="canvas-element-${q.id}" width="310" height="438" class="absolute inset-0 z-10 block cursor-crosshair"></canvas>
+                  </div>
+
+                  <!-- Floating zoom indicator -->
+                  <div class="absolute bottom-3 right-3 bg-slate-900/90 border border-slate-800 text-[10px] px-2 py-1 rounded-lg text-slate-300 pointer-events-none font-bold z-20">
+                    Zoom: <span id="zoom-label-${q.id}">100%</span>
+                  </div>
+                </div>
+
+                <!-- Right Assets & Color Panel -->
+                <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 flex flex-col space-y-4">
+
+                  <!-- Color Palette -->
+                  <div class="space-y-2">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Paleta de Colores</span>
+                    <div class="grid grid-cols-6 gap-1.5" id="color-palette-${q.id}">
+                      <!-- Populated dynamically -->
+                    </div>
+                    <div class="flex items-center justify-between pt-1.5 border-t border-slate-800/60">
+                      <span class="text-[9px] text-slate-400 font-bold uppercase">Personalizado</span>
+                      <input type="color" id="color-picker-${q.id}" value="#a855f7" class="w-6 h-6 rounded-lg bg-transparent border-none cursor-pointer">
+                    </div>
+                  </div>
+
+                  <!-- Assets Drawer -->
+                  <div class="flex-1 flex flex-col min-h-0 space-y-1.5">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block shrink-0">Biblioteca de Assets (Ilustraciones)</span>
+                    <div class="flex-1 overflow-y-auto custom-scroll pr-1 space-y-1.5" id="assets-drawer-${q.id}">
+                      <!-- Populated with click-to-add items -->
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+          `;
         }
 
         partHtml += `
@@ -459,6 +571,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const answeredCount = Object.keys(currentAnswers).length;
     updateProgress(techProgressText, answeredCount, qCount);
+
+    // Activar los canvas interactivos tipo Illustrator renders
+    exam.parts.forEach(part => {
+      part.questions.forEach(q => {
+        if (q.type === 'canvas') {
+          initIllustratorCanvas(q.id, exam.id);
+        }
+      });
+    });
 
     // Actualizar texto del botón según si hay más exámenes después
     if (currentTechnicalExamIndex < assignedTechnicalExamsList.length - 1) {
@@ -631,6 +752,574 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadActiveCandidates();
     showStep(stepSelectCandidate);
   });
+
+  // ==========================================
+  // ADOBE ILLUSTRATOR MODE (CUSTOM CANVAS LOGIC)
+  // ==========================================
+  function initIllustratorCanvas(qId, examId) {
+    const canvas = document.getElementById(`canvas-element-${qId}`);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById(`canvas-container-${qId}`);
+    const board = document.getElementById(`a4-board-${qId}`);
+    const zoomLabel = document.getElementById(`zoom-label-${qId}`);
+    const brushSizeInput = document.getElementById(`brush-size-${qId}`);
+    const colorPicker = document.getElementById(`color-picker-${qId}`);
+    const textInput = document.getElementById(`text-input-${qId}`);
+    const addTextBtn = document.getElementById(`btn-add-text-${qId}`);
+    const undoBtn = document.getElementById(`btn-undo-${qId}`);
+    const clearBtn = document.getElementById(`btn-clear-${qId}`);
+    const timerLabel = document.getElementById(`canvas-timer-${qId}`);
+
+    let layers = [];
+    let undoHistory = [];
+    let currentTool = 'select'; // select, draw, rect, circle
+    let brushSize = 5;
+    let strokeColor = '#a855f7';
+    let selectedObject = null;
+    let isDrawing = false;
+    let startX = 0;
+    let startY = 0;
+    let currentX = 0;
+    let currentY = 0;
+    let currentStrokePoints = [];
+    let zoomScale = 1.0;
+
+    // Inicializar respuestas para este examen
+    if (!technicalAnswersByExam[examId]) {
+      technicalAnswersByExam[examId] = {};
+    }
+
+    // Configurar temporizador (30 Minutos)
+    let timeRemainingSeconds = 30 * 60;
+    const timerInterval = setInterval(() => {
+      if (document.getElementById(`canvas-timer-${qId}`) === null) {
+        clearInterval(timerInterval);
+        return;
+      }
+      if (timeRemainingSeconds <= 0) {
+        clearInterval(timerInterval);
+        saveCanvasToAnswers();
+        showPastelAlert("¡El tiempo límite de 30 minutos para tu examen ha concluido! Tus respuestas del lienzo se han guardado automáticamente.", "Tiempo Agotado");
+        return;
+      }
+      timeRemainingSeconds--;
+      const min = String(Math.floor(timeRemainingSeconds / 60)).padStart(2, '0');
+      const sec = String(timeRemainingSeconds % 60).padStart(2, '0');
+      timerLabel.textContent = `Tiempo Restante: ${min}:${sec}`;
+    }, 1000);
+
+    // Paleta de Colores Pastel & Estándar
+    const colors = [
+      '#000000', '#ffffff', '#ef4444', '#f97316', '#f59e0b', '#10b981',
+      '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e'
+    ];
+    const paletteContainer = document.getElementById(`color-palette-${qId}`);
+    if (paletteContainer) {
+      paletteContainer.innerHTML = '';
+      colors.forEach(color => {
+        const borderStyle = color === '#ffffff' ? 'border-gray-300' : 'border-transparent';
+        paletteContainer.innerHTML += `
+          <button type="button" class="w-5 h-5 rounded-full border ${borderStyle} transition transform hover:scale-115 active:scale-95" style="background-color: ${color};" data-color="${color}"></button>
+        `;
+      });
+      // Click handlers para la paleta
+      paletteContainer.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          strokeColor = btn.getAttribute('data-color');
+          if (colorPicker) colorPicker.value = strokeColor;
+          updateSelectedObjectStyle();
+        });
+      });
+    }
+
+    if (colorPicker) {
+      colorPicker.addEventListener('input', (e) => {
+        strokeColor = e.target.value;
+        updateSelectedObjectStyle();
+      });
+    }
+
+    if (brushSizeInput) {
+      brushSizeInput.addEventListener('input', (e) => {
+        brushSize = parseInt(e.target.value);
+        updateSelectedObjectStyle();
+      });
+    }
+
+    function updateSelectedObjectStyle() {
+      if (selectedObject && currentTool === 'select') {
+        if (selectedObject.type === 'rect' || selectedObject.type === 'circle' || selectedObject.type === 'text') {
+          selectedObject.color = strokeColor;
+        }
+        if (selectedObject.type === 'rect' || selectedObject.type === 'circle') {
+          selectedObject.width = brushSize;
+        }
+        saveCanvasState();
+        drawWorkspace();
+      }
+    }
+
+    // Biblioteca de 10 Assets
+    const assets = [
+      { name: "👑 Corona Real", type: "emoji", value: "👑" },
+      { name: "⚡ Rayo", type: "emoji", value: "⚡" },
+      { name: "⭐ Estrella Dorada", type: "emoji", value: "⭐" },
+      { name: "💡 Idea Genial", type: "emoji", value: "💡" },
+      { name: "🔥 Fuego Intenso", type: "emoji", value: "🔥" },
+      { name: "🛡️ Escudo de Éxito", type: "emoji", value: "🛡️" },
+      { name: "📢 Megáfono Oferta", type: "emoji", value: "📢" },
+      { name: "🎯 Tiro al Blanco", type: "emoji", value: "🎯" },
+      { name: "🚀 Cohete Alza", type: "emoji", value: "🚀" },
+      { name: "🍀 Trébol Suerte", type: "emoji", value: "🍀" }
+    ];
+    const assetsContainer = document.getElementById(`assets-drawer-${qId}`);
+    if (assetsContainer) {
+      assetsContainer.innerHTML = '';
+      assets.forEach((asset, idx) => {
+        assetsContainer.innerHTML += `
+          <button type="button" class="w-full text-left p-1.5 bg-slate-900 hover:bg-purple-900/40 rounded-xl transition text-[11px] font-bold text-slate-300 flex items-center gap-2 border border-slate-800 hover:border-purple-800" data-asset-idx="${idx}">
+            <span class="text-base">${asset.value}</span>
+            <span>${asset.name}</span>
+          </button>
+        `;
+      });
+      assetsContainer.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.getAttribute('data-asset-idx'));
+          const asset = assets[idx];
+          addAssetToCanvas(asset);
+        });
+      });
+    }
+
+    function addAssetToCanvas(asset) {
+      const newObj = {
+        id: "layer_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+        type: 'text',
+        text: asset.value,
+        fontSize: 50,
+        x: 130,
+        y: 200,
+        color: '#000000'
+      };
+      saveStateToUndo();
+      layers.push(newObj);
+      selectedObject = newObj;
+      currentTool = 'select';
+      updateToolUI();
+      drawWorkspace();
+      saveCanvasToAnswers();
+    }
+
+    // Cambiar Herramientas
+    document.querySelectorAll(`.canvas-tool-btn[data-q-id="${qId}"]`).forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Remover clases activas de todas las del grupo de esta pregunta
+        document.querySelectorAll(`.canvas-tool-btn[data-q-id="${qId}"]`).forEach(b => {
+          b.className = "canvas-tool-btn p-2 rounded-xl transition text-xs font-bold flex flex-col items-center gap-1 bg-slate-900 text-slate-400 hover:bg-slate-800";
+        });
+        btn.className = "canvas-tool-btn p-2 rounded-xl transition text-xs font-bold flex flex-col items-center gap-1 active bg-purple-600 text-white";
+        currentTool = btn.getAttribute('data-tool');
+        if (currentTool !== 'select') {
+          selectedObject = null;
+        }
+        drawWorkspace();
+      });
+    });
+
+    function updateToolUI() {
+      document.querySelectorAll(`.canvas-tool-btn[data-q-id="${qId}"]`).forEach(b => {
+        const t = b.getAttribute('data-tool');
+        if (t === currentTool) {
+          b.className = "canvas-tool-btn p-2 rounded-xl transition text-xs font-bold flex flex-col items-center gap-1 active bg-purple-600 text-white";
+        } else {
+          b.className = "canvas-tool-btn p-2 rounded-xl transition text-xs font-bold flex flex-col items-center gap-1 bg-slate-900 text-slate-400 hover:bg-slate-800";
+        }
+      });
+    }
+
+    // Añadir texto
+    if (addTextBtn) {
+      addTextBtn.addEventListener('click', () => {
+        const val = textInput.value.trim();
+        if (!val) return;
+        saveStateToUndo();
+        const newObj = {
+          id: "layer_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+          type: 'text',
+          text: val,
+          fontSize: 24,
+          x: 50,
+          y: 200,
+          color: strokeColor
+        };
+        layers.push(newObj);
+        selectedObject = newObj;
+        currentTool = 'select';
+        updateToolUI();
+        drawWorkspace();
+        saveCanvasToAnswers();
+      });
+    }
+
+    // Deshacer / Limpiar
+    if (undoBtn) {
+      undoBtn.addEventListener('click', () => {
+        if (undoHistory.length > 0) {
+          layers = undoHistory.pop();
+          selectedObject = null;
+          drawWorkspace();
+          saveCanvasToAnswers();
+        } else {
+          showPastelAlert("No hay más acciones para deshacer.", "Lienzo");
+        }
+      });
+    }
+
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        showPastelConfirm("¿Deseas vaciar completamente el lienzo de dibujo?", (accepted) => {
+          if (accepted) {
+            saveStateToUndo();
+            layers = [];
+            selectedObject = null;
+            drawWorkspace();
+            saveCanvasToAnswers();
+          }
+        }, "Limpiar Lienzo");
+      });
+    }
+
+    function saveStateToUndo() {
+      // Guardar clon en historial de deshacer
+      undoHistory.push(JSON.parse(JSON.stringify(layers)));
+      if (undoHistory.length > 15) {
+        undoHistory.shift();
+      }
+    }
+
+    function saveCanvasState() {
+      saveCanvasToAnswers();
+    }
+
+    function saveCanvasToAnswers() {
+      technicalAnswersByExam[examId][qId] = canvas.toDataURL('image/png');
+      const total = Object.keys(technicalAnswersByExam[examId]).length;
+      const qCount = assignedTechnicalExamsList[currentTechnicalExamIndex].parts.reduce((acc, p) => acc + p.questions.length, 0);
+      updateProgress(techProgressText, total, qCount);
+    }
+
+    // Soporte para Zoom con Rueda del Mouse + Tecla Espacio
+    let isSpacePressed = false;
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && document.activeElement.tagName !== 'INPUT') {
+        isSpacePressed = true;
+        container.style.cursor = 'grab';
+        e.preventDefault();
+      }
+      // Ctrl + Z
+      if (e.ctrlKey && e.code === 'KeyZ') {
+        if (undoHistory.length > 0) {
+          layers = undoHistory.pop();
+          selectedObject = null;
+          drawWorkspace();
+          saveCanvasToAnswers();
+        }
+        e.preventDefault();
+      }
+      // Suprimir o Borrar elemento seleccionado
+      if ((e.code === 'Delete' || e.code === 'Backspace') && selectedObject && document.activeElement.tagName !== 'INPUT') {
+        saveStateToUndo();
+        layers = layers.filter(l => l.id !== selectedObject.id);
+        selectedObject = null;
+        drawWorkspace();
+        saveCanvasToAnswers();
+        e.preventDefault();
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'Space') {
+        isSpacePressed = false;
+        container.style.cursor = 'default';
+      }
+    });
+
+    // Control de zoom por rueda
+    container.addEventListener('wheel', (e) => {
+      if (isSpacePressed || e.ctrlKey) {
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 0.1 : -0.1;
+        zoomScale = Math.min(Math.max(zoomScale + delta, 0.5), 2.5);
+        board.style.transform = `scale(${zoomScale})`;
+        zoomLabel.textContent = `${Math.round(zoomScale * 100)}%`;
+      }
+    }, { passive: false });
+
+    // Dibujado del Workspace
+    function drawWorkspace() {
+      // Limpiar lienzo
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Dibujar cuadrícula tenue para dar aspecto de diseño profesional
+      ctx.strokeStyle = '#f1f5f9';
+      ctx.lineWidth = 1;
+      const gridSize = 20;
+      for (let x = 0; x < canvas.width; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+      }
+      for (let y = 0; y < canvas.height; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+      }
+
+      // Dibujar cada objeto/capa
+      layers.forEach(layer => {
+        if (layer.type === 'stroke') {
+          if (layer.points.length < 2) return;
+          ctx.beginPath();
+          ctx.strokeStyle = layer.color;
+          ctx.lineWidth = layer.width;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.moveTo(layer.points[0].x, layer.points[0].y);
+          for (let i = 1; i < layer.points.length; i++) {
+            ctx.lineTo(layer.points[i].x, layer.points[i].y);
+          }
+          ctx.stroke();
+        } else if (layer.type === 'rect') {
+          ctx.beginPath();
+          ctx.strokeStyle = layer.color;
+          ctx.lineWidth = layer.width;
+          ctx.strokeRect(layer.x, layer.y, layer.w, layer.h);
+        } else if (layer.type === 'circle') {
+          ctx.beginPath();
+          ctx.strokeStyle = layer.color;
+          ctx.lineWidth = layer.width;
+          ctx.arc(layer.x, layer.y, layer.r, 0, Math.PI * 2);
+          ctx.stroke();
+        } else if (layer.type === 'text') {
+          ctx.fillStyle = layer.color;
+          ctx.font = `bold ${layer.fontSize}px 'Quicksand', sans-serif`;
+          ctx.textBaseline = 'top';
+          ctx.fillText(layer.text, layer.x, layer.y);
+        }
+      });
+
+      // Dibujar caja de selección si estamos en herramienta select
+      if (currentTool === 'select' && selectedObject) {
+        ctx.save();
+        ctx.strokeStyle = '#a855f7';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([5, 4]);
+
+        let bx = 0, by = 0, bw = 0, bh = 0;
+        if (selectedObject.type === 'stroke') {
+          // Obtener límites del stroke
+          const xs = selectedObject.points.map(p => p.x);
+          const ys = selectedObject.points.map(p => p.y);
+          const minX = Math.min(...xs);
+          const maxX = Math.max(...xs);
+          const minY = Math.min(...ys);
+          const maxY = Math.max(...ys);
+          bx = minX - 4;
+          by = minY - 4;
+          bw = (maxX - minX) + 8;
+          bh = (maxY - minY) + 8;
+        } else if (selectedObject.type === 'rect') {
+          bx = selectedObject.x - 4;
+          by = selectedObject.y - 4;
+          bw = selectedObject.w + 8;
+          bh = selectedObject.h + 8;
+        } else if (selectedObject.type === 'circle') {
+          bx = selectedObject.x - selectedObject.r - 4;
+          by = selectedObject.y - selectedObject.r - 4;
+          bw = (selectedObject.r * 2) + 8;
+          bh = (selectedObject.r * 2) + 8;
+        } else if (selectedObject.type === 'text') {
+          ctx.font = `bold ${selectedObject.fontSize}px 'Quicksand', sans-serif`;
+          const textMetrics = ctx.measureText(selectedObject.text);
+          bx = selectedObject.x - 4;
+          by = selectedObject.y - 2;
+          bw = textMetrics.width + 8;
+          bh = selectedObject.fontSize + 4;
+        }
+
+        ctx.strokeRect(bx, by, bw, bh);
+
+        // Esquinas de selección
+        ctx.fillStyle = '#a855f7';
+        ctx.fillRect(bx - 3, by - 3, 6, 6);
+        ctx.fillRect(bx + bw - 3, by - 3, 6, 6);
+        ctx.fillRect(bx - 3, by + bh - 3, 6, 6);
+        ctx.fillRect(bx + bw - 3, by + bh - 3, 6, 6);
+
+        ctx.restore();
+      }
+    }
+
+    // Obtener coordenadas de mouse relativas a la hoja A4
+    function getMouseCoords(e) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: (e.clientX - rect.left) * (canvas.width / rect.width),
+        y: (e.clientY - rect.top) * (canvas.height / rect.height)
+      };
+    }
+
+    // Eventos de Mouse en el lienzo
+    canvas.addEventListener('mousedown', (e) => {
+      const coords = getMouseCoords(e);
+      startX = coords.x;
+      startY = coords.y;
+
+      if (currentTool === 'draw') {
+        isDrawing = true;
+        saveStateToUndo();
+        currentStrokePoints = [{ x: startX, y: startY }];
+        layers.push({
+          id: "layer_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+          type: 'stroke',
+          color: strokeColor,
+          width: brushSize,
+          points: currentStrokePoints
+        });
+      } else if (currentTool === 'rect') {
+        isDrawing = true;
+        saveStateToUndo();
+        layers.push({
+          id: "layer_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+          type: 'rect',
+          color: strokeColor,
+          width: brushSize,
+          x: startX,
+          y: startY,
+          w: 1,
+          h: 1
+        });
+      } else if (currentTool === 'circle') {
+        isDrawing = true;
+        saveStateToUndo();
+        layers.push({
+          id: "layer_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+          type: 'circle',
+          color: strokeColor,
+          width: brushSize,
+          x: startX,
+          y: startY,
+          r: 1
+        });
+      } else if (currentTool === 'select') {
+        // Encontrar colisión de abajo hacia arriba (último pintado)
+        let found = null;
+        for (let i = layers.length - 1; i >= 0; i--) {
+          const l = layers[i];
+          if (l.type === 'rect') {
+            if (startX >= l.x && startX <= l.x + l.w && startY >= l.y && startY <= l.y + l.h) {
+              found = l;
+              break;
+            }
+          } else if (l.type === 'circle') {
+            const dist = Math.sqrt((startX - l.x)**2 + (startY - l.y)**2);
+            if (dist <= l.r + 4) {
+              found = l;
+              break;
+            }
+          } else if (l.type === 'text') {
+            ctx.font = `bold ${l.fontSize}px 'Quicksand', sans-serif`;
+            const textMetrics = ctx.measureText(l.text);
+            if (startX >= l.x && startX <= l.x + textMetrics.width && startY >= l.y && startY <= l.y + l.fontSize) {
+              found = l;
+              break;
+            }
+          } else if (l.type === 'stroke') {
+            // Distancia mínima a cualquier punto del trazo
+            for (let p of l.points) {
+              const d = Math.sqrt((startX - p.x)**2 + (startY - p.y)**2);
+              if (d <= l.width + 5) {
+                found = l;
+                break;
+              }
+            }
+            if (found) break;
+          }
+        }
+
+        if (found) {
+          selectedObject = found;
+          // Guardar offset de arrastre inicial
+          selectedObject.offsetX = startX - selectedObject.x;
+          selectedObject.offsetY = startY - selectedObject.y;
+          if (selectedObject.type === 'stroke') {
+            selectedObject.startPoints = JSON.parse(JSON.stringify(selectedObject.points));
+          }
+          isDrawing = true;
+        } else {
+          selectedObject = null;
+        }
+        drawWorkspace();
+      }
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (!isDrawing) return;
+      const coords = getMouseCoords(e);
+      currentX = coords.x;
+      currentY = coords.y;
+
+      const activeLayer = layers[layers.length - 1];
+
+      if (currentTool === 'draw') {
+        activeLayer.points.push({ x: currentX, y: currentY });
+        drawWorkspace();
+      } else if (currentTool === 'rect') {
+        activeLayer.w = currentX - startX;
+        activeLayer.h = currentY - startY;
+        drawWorkspace();
+      } else if (currentTool === 'circle') {
+        const radius = Math.sqrt((currentX - startX)**2 + (currentY - startY)**2);
+        activeLayer.r = radius;
+        drawWorkspace();
+      } else if (currentTool === 'select' && selectedObject) {
+        if (selectedObject.type === 'stroke') {
+          const dx = currentX - startX;
+          const dy = currentY - startY;
+          selectedObject.points = selectedObject.startPoints.map(p => ({
+            x: p.x + dx,
+            y: p.y + dy
+          }));
+        } else {
+          selectedObject.x = currentX - selectedObject.offsetX;
+          selectedObject.y = currentY - selectedObject.offsetY;
+        }
+        drawWorkspace();
+      }
+    });
+
+    canvas.addEventListener('mouseup', () => {
+      if (isDrawing) {
+        isDrawing = false;
+        saveCanvasToAnswers();
+      }
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+      if (isDrawing) {
+        isDrawing = false;
+        saveCanvasToAnswers();
+      }
+    });
+
+    // Dibujar inicialización
+    drawWorkspace();
+  }
 
   // Inicializar
   await loadActiveCandidates();

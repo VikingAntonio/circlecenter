@@ -1,0 +1,12 @@
+127.0.0.1 - - [09/Jul/2026 12:31:49] "HEAD / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2026 12:34:07] "GET /index.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2026 12:34:09] "GET /login.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2026 12:34:09] "GET /js/login.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2026 12:35:26] "GET /index.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2026 12:35:28] "GET /login.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2026 12:35:28] "GET /js/login.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2026 12:35:30] "GET /admin.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2026 12:35:30] "GET /js/supabase.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2026 12:35:30] "GET /js/admin.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2026 12:35:33] "GET /rh.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2026 12:35:33] "GET /js/candidate.js HTTP/1.1" 200 -

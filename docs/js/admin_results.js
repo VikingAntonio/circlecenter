@@ -254,16 +254,54 @@ document.addEventListener('DOMContentLoaded', async () => {
       `;
 
       part.questions.forEach((q, idx) => {
-        const hasCorrect = q.type !== 'short';
+        const hasCorrect = q.type !== 'short' && q.type !== 'canvas';
         const isCorrect = hasCorrect && (q.userAnswer === q.correct);
 
         let badge = "";
-        if (hasCorrect) {
+        if (q.type === 'canvas') {
+          badge = `<span class="text-[9px] font-bold bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full border border-purple-100"><i class="fa-solid fa-palette text-purple-500"></i> Diseño Canvas</span>`;
+        } else if (hasCorrect) {
           badge = isCorrect
             ? `<span class="text-[9px] font-bold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-100"><i class="fa-solid fa-check"></i> Correcto</span>`
             : `<span class="text-[9px] font-bold bg-rose-50 text-rose-700 px-2 py-0.5 rounded-full border border-rose-100"><i class="fa-solid fa-xmark"></i> Incorrecto</span>`;
         } else {
           badge = `<span class="text-[9px] font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-100">Abierta</span>`;
+        }
+
+        let answerWidget = "";
+        if (q.type === 'canvas') {
+          if (q.userAnswer && q.userAnswer.startsWith('data:image/')) {
+            answerWidget = `
+              <div class="col-span-2 bg-slate-900 p-3 rounded-2xl border border-slate-800 flex flex-col items-center gap-2 max-w-sm mx-auto shadow-inner mt-1">
+                <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Diseño Final Exportado (Hoja A4)</span>
+                <div class="bg-white rounded-xl overflow-hidden border border-slate-700 shadow-md">
+                  <img src="${q.userAnswer}" class="max-w-full h-auto object-contain block max-h-[300px]" alt="Diseño de Candidato">
+                </div>
+                <a href="${q.userAnswer}" download="diseño_candidato_${Date.now()}.png" class="px-3 py-1 bg-purple-900/40 hover:bg-purple-900 text-purple-300 font-bold text-[10px] rounded-lg transition border border-purple-800 flex items-center gap-1">
+                  <i class="fa-solid fa-download"></i> Descargar Imagen A4
+                </a>
+              </div>
+            `;
+          } else {
+            answerWidget = `
+              <div class="col-span-2 bg-slate-50 p-4 rounded-xl border border-slate-200 text-center text-xs text-slate-400 mt-1">
+                <i class="fa-regular fa-image text-lg mb-1 block"></i> El candidato no realizó ningún dibujo en el lienzo.
+              </div>
+            `;
+          }
+        } else {
+          answerWidget = `
+            <div class="bg-blue-50/20 p-2 rounded-lg border border-blue-100/20">
+              <strong class="text-[8px] text-gray-400 block uppercase">Respuesta del Aspirante</strong>
+              <span class="font-medium text-blue-900">${q.userAnswer || '<em class="text-gray-300">Sin responder</em>'}</span>
+            </div>
+            ${hasCorrect ? `
+              <div class="bg-emerald-50/10 p-2 rounded-lg border border-emerald-100/10">
+                <strong class="text-[8px] text-gray-400 block uppercase">Clave Esperada</strong>
+                <span class="font-medium text-emerald-950">${q.correct}</span>
+              </div>
+            ` : ''}
+          `;
         }
 
         partHtml += `
@@ -273,16 +311,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               ${badge}
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-              <div class="bg-blue-50/20 p-2 rounded-lg border border-blue-100/20">
-                <strong class="text-[8px] text-gray-400 block uppercase">Respuesta del Aspirante</strong>
-                <span class="font-medium text-blue-900">${q.userAnswer || '<em class="text-gray-300">Sin responder</em>'}</span>
-              </div>
-              ${hasCorrect ? `
-                <div class="bg-emerald-50/10 p-2 rounded-lg border border-emerald-100/10">
-                  <strong class="text-[8px] text-gray-400 block uppercase">Clave Esperada</strong>
-                  <span class="font-medium text-emerald-950">${q.correct}</span>
-                </div>
-              ` : ''}
+              ${answerWidget}
             </div>
           </div>
         `;
